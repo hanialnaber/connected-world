@@ -1,0 +1,33 @@
+version: 2
+models:
+  - name: stg_gapminder__countries
+    columns:
+      - name: iso3
+        tests: [unique, not_null]
+  - name: stg_football__results
+    columns:
+      - name: match_id
+        tests: [unique, not_null]
+      - name: home_score
+        tests:
+          - between: {arguments: {min_value: 0, max_value: 40}}
+  - name: stg_olympics__results
+    columns:
+      - name: medal
+        tests:
+          - accepted_values: {arguments: {values: ['Gold', 'Silver', 'Bronze']}}
+  - name: stg_eurovision__votes
+    columns:
+      - name: points
+        tests:
+          - between: {arguments: {min_value: 0, max_value: 12}}
+  - name: stg_passports__requirements
+    columns:
+      - name: entry_type
+        tests:
+          - accepted_values: {arguments: {values: ['own country', 'no admission', 'visa free', 'visa on arrival', 'eta', 'e-visa', 'visa required']}}
+  - name: stg_bigmac__prices
+    columns:
+      - name: dollar_price
+        tests:
+          - between: {arguments: {min_value: 0.3, max_value: 15}}

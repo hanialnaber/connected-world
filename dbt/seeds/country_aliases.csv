@@ -1,0 +1,606 @@
+alias,iso3,method,used_by
+Abkhazia,,excluded_non_fifa,football
+Afghanistan,AFG,auto,football
+Albania,ALB,auto,eurovision|football
+Alderney,,excluded_non_fifa,football
+Algeria,DZA,auto,football|nobel-modern
+"Alsace (then Germany, now France)",FRA,manual,nobel
+American Samoa,ASM,auto,football
+Andalusia,,excluded_non_fifa,football
+Andorra,AND,auto,eurovision|football
+Angola,AGO,auto,football
+Anguilla,AIA,auto,football
+Antigua and Barbuda,ATG,manual,football
+Arameans Suryoye,,excluded_non_fifa,football
+Argentina,ARG,auto,football|nobel
+Armenia,ARM,auto,eurovision|football
+Artsakh,,excluded_non_fifa,football
+Aruba,ABW,auto,football
+Australia,AUS,auto,eurovision|football|nobel
+Austria,AUT,auto,eurovision|football|nobel|nobel-modern
+Austria-Hungary (Austria),AUT,auto,nobel
+Austria-Hungary (Bosnia and Herzegovina),BIH,manual,nobel
+Austria-Hungary (Croatia),HRV,auto,nobel
+Austria-Hungary (Czech Republic),CZE,manual,nobel
+Austria-Hungary (Hungary),HUN,auto,nobel
+Austria-Hungary (Poland),POL,auto,nobel
+Austria-Hungary (Slovenia),SVN,auto,nobel
+Austria-Hungary (Ukraine),UKR,auto,nobel
+Austrian Empire (Austria),AUT,auto,nobel
+Austrian Empire (Czech Republic),CZE,manual,nobel
+Austrian Empire (Italy),ITA,auto,nobel
+Aymara,,excluded_non_fifa,football
+Azerbaijan,AZE,auto,eurovision|football|nobel-modern
+Bahamas,BHS,auto,football
+Bahrain,BHR,auto,football
+Bangladesh,BGD,auto,football|nobel-modern
+Barawa,,excluded_non_fifa,football
+Barbados,BRB,auto,football
+Basque Country,,excluded_non_fifa,football
+Bavaria (Germany),DEU,auto,nobel
+Belarus,BLR,auto,eurovision|football|nobel-modern
+Belgium,BEL,auto,eurovision|football|nobel
+Belize,BLZ,auto,football
+Benin,BEN,auto,football
+Bermuda,BMU,auto,football
+Bhutan,BTN,auto,football
+Biafra,,excluded_non_fifa,football
+Bolivia,BOL,manual,football
+Bonaire,,excluded_non_fifa,football
+Bosnia & Herzegovina,BIH,manual,eurovision
+Bosnia (Bosnia and Herzegovina),BIH,manual,nobel
+Bosnia and Herzegovina,BIH,manual,football|nobel-modern
+Botswana,BWA,auto,football
+Brazil,BRA,auto,football|nobel
+British India (Bangladesh),BGD,auto,nobel
+British India (India),IND,auto,nobel
+British Mandate of Palestine (Israel),ISR,auto,nobel
+British Protectorate of Palestine (Israel),ISR,auto,nobel
+British Virgin Islands,VGB,manual,football
+British West Indies (Saint Lucia),LCA,manual,nobel
+Brittany,,excluded_non_fifa,football
+Brunei,BRN,manual,football
+Bulgaria,BGR,auto,eurovision|football|nobel
+Burkina Faso,BFA,auto,football
+Burma (Myanmar),MMR,manual,nobel
+Burundi,BDI,auto,football
+Cambodia,KHM,auto,football
+Cameroon,CMR,auto,football
+Canada,CAN,auto,football|nobel
+Canton Ticino,,excluded_non_fifa,football
+Cape Verde,CPV,manual,football
+Cascadia,,excluded_non_fifa,football
+Catalonia,,excluded_non_fifa,football
+Cayman Islands,CYM,auto,football
+Central African Republic,CAF,auto,football
+Chad,TCD,auto,football
+Chagos Islands,,excluded_non_fifa,football
+Chameria,,excluded_non_fifa,football
+Chile,CHL,auto,football|nobel
+China,CHN,auto,football|nobel
+Cilento,,excluded_non_fifa,football
+Colombia,COL,auto,football|nobel
+Comoros,COM,auto,football
+Congo,COG,manual,football
+Cook Islands,COK,auto,football
+Corsica,,excluded_non_fifa,football
+Costa Rica,CRI,auto,football|nobel
+County of Nice,,excluded_non_fifa,football
+Crete (Greece),GRC,auto,nobel
+Croatia,HRV,auto,eurovision|football|nobel-modern
+Cuba,CUB,auto,football
+Curaçao,CUW,manual,football
+Cyprus,CYP,auto,eurovision|football|nobel
+Czech Republic,CZE,manual,eurovision|football|nobel-modern
+Czechoslovakia,,manual,nobel
+Czechoslovakia (Czech Republic),CZE,manual,nobel
+DR Congo,COD,manual,football
+Darfur,,excluded_non_fifa,football
+Denmark,DNK,auto,eurovision|football|nobel|nobel-modern
+Djibouti,DJI,auto,football
+Dominica,DMA,auto,football
+Dominican Republic,DOM,auto,football
+Donetsk PR,,excluded_non_fifa,football
+Délvidék,,excluded_non_fifa,football
+East Friesland (Germany),DEU,auto,nobel
+East Timor,TLS,manual,nobel
+East Turkestan,,excluded_non_fifa,football
+Ecuador,ECU,auto,football
+Egypt,EGY,auto,football|nobel
+El Salvador,SLV,auto,football
+Elba Island,,excluded_non_fifa,football
+Ellan Vannin,,manual,football
+England,GB-ENG,manual,football
+Equatorial Guinea,GNQ,auto,football
+Eritrea,ERI,auto,football
+Estonia,EST,auto,eurovision|football
+Eswatini,SWZ,manual,football
+Ethiopia,ETH,auto,football
+F.Y.R. Macedonia,MKD,manual,eurovision
+Falkland Islands,FLK,auto,football
+Faroe Islands,FRO,manual,football
+Faroe Islands (Denmark),DNK,auto,nobel
+Federal Republic of Germany,DEU,manual,nobel
+Felvidék,,excluded_non_fifa,football
+Fiji,FJI,auto,football
+Finland,FIN,auto,eurovision|football|nobel|nobel-modern
+France,FRA,auto,eurovision|football|nobel|nobel-modern
+Franconia,,excluded_non_fifa,football
+Free City of Danzig (Poland),POL,auto,nobel
+French Algeria (Algeria),DZA,auto,nobel
+French Guiana,GUF,auto,football
+Frøya,,excluded_non_fifa,football
+Gabon,GAB,auto,football
+Galicia,,excluded_non_fifa,football
+Gambia,GMB,manual,football
+Georgia,GEO,auto,eurovision|football
+German-occupied Poland (Poland),POL,auto,nobel
+Germany,DEU,auto,eurovision|football|nobel|nobel-modern
+Germany (France),FRA,auto,nobel
+Germany (Poland),POL,auto,nobel
+Germany (Russia),RUS,manual,nobel
+Ghana,GHA,auto,football|nobel-modern
+Gibraltar,GIB,auto,football
+Gold Coast (Ghana),GHA,auto,nobel
+Gotland,,excluded_non_fifa,football
+Gozo,,excluded_non_fifa,football
+Greece,GRC,auto,eurovision|football|nobel-modern
+Greenland,GRL,auto,football
+Grenada,GRD,auto,football
+Guadeloupe,GLP,manual,football
+Guadeloupe Island,GLP,manual,nobel
+Guam,GUM,auto,football
+Guatemala,GTM,auto,football|nobel
+Guernsey,GGY,auto,football
+Guinea,GIN,auto,football
+Guinea-Bissau,GNB,auto,football
+Guyana,GUY,auto,football
+Haiti,HTI,auto,football
+Hesse-Kassel (Germany),DEU,auto,nobel
+Hitra,,excluded_non_fifa,football
+Hmong,,excluded_non_fifa,football
+Honduras,HND,auto,football
+Hong Kong,HKG,manual,football
+Hungary,HUN,auto,eurovision|football|nobel|nobel-modern
+Hungary (Slovakia),SVK,auto,nobel
+Iceland,ISL,auto,eurovision|football|nobel
+India,IND,auto,football|nobel|nobel-modern
+India (Pakistan),PAK,auto,nobel
+Indonesia,IDN,auto,football|nobel-modern
+Iran,IRN,manual,football|nobel|nobel-modern
+Iraq,IRQ,auto,football
+Iraqi Kurdistan,,excluded_non_fifa,football
+Ireland,IRL,manual,eurovision|nobel
+Isle of Man,IMN,auto,football
+Isle of Wight,,excluded_non_fifa,football
+Israel,ISR,auto,eurovision|football|nobel|nobel-modern
+Italy,ITA,auto,eurovision|football|nobel|nobel-modern
+Ivory Coast,CIV,manual,football
+Jamaica,JAM,auto,football
+Japan,JPN,auto,football|nobel
+"Java, Dutch East Indies (Indonesia)",IDN,auto,nobel
+Jersey,JEY,auto,football
+Jordan,JOR,auto,football
+Kabylia,,excluded_non_fifa,football
+Kazakhstan,KAZ,auto,football
+Kenya,KEN,auto,football|nobel
+Kernow,,excluded_non_fifa,football
+Kiribati,KIR,auto,football
+Korea (South Korea),KOR,manual,nobel
+Kosovo,XKX,manual,football
+Kurdistan,,excluded_non_fifa,football
+Kuwait,KWT,auto,football
+Kyrgyzstan,KGZ,auto,football
+Kárpátalja,,excluded_non_fifa,football
+Laos,LAO,manual,football
+Latvia,LVA,auto,eurovision|football|nobel-modern
+Lebanon,LBN,auto,football
+Lesotho,LSO,auto,football
+Liberia,LBR,auto,football|nobel
+Libya,LBY,auto,football
+Liechtenstein,LIE,auto,football
+Lithuania,LTU,auto,eurovision|football|nobel|nobel-modern
+Luhansk PR,,excluded_non_fifa,football
+Luxembourg,LUX,auto,eurovision|football|nobel
+Macau,MAC,manual,football
+Macedonia,MKD,manual,eurovision
+Madagascar,MDG,auto,football|nobel
+Madrid,,excluded_non_fifa,football
+Malawi,MWI,auto,football
+Malaysia,MYS,auto,football
+Maldives,MDV,auto,football
+Mali,MLI,auto,football
+Malta,MLT,auto,eurovision|football
+Mapuche,,excluded_non_fifa,football
+Marshall Islands,MHL,auto,football
+Martinique,MTQ,auto,football
+Matabeleland,,excluded_non_fifa,football
+Maule Sur,,excluded_non_fifa,football
+Mauritania,MRT,auto,football
+Mauritius,MUS,auto,football
+Mayotte,MYT,auto,football
+Mecklenburg (Germany),DEU,auto,nobel
+Menorca,,excluded_non_fifa,football
+Mexico,MEX,auto,football|nobel
+Moldova,MDA,manual,eurovision|football
+Monaco,MCO,auto,eurovision|football
+Mongolia,MNG,auto,football
+Montenegro,MNE,auto,eurovision|football
+Montserrat,MSR,auto,football
+Morocco,MAR,auto,eurovision|football|nobel
+Mozambique,MOZ,auto,football
+Myanmar,MMR,manual,football|nobel-modern
+Namibia,NAM,auto,football
+Nepal,NPL,auto,football
+Netherlands,NLD,manual,eurovision|football|nobel
+New Caledonia,NCL,auto,football
+New Zealand,NZL,auto,football|nobel
+Nicaragua,NIC,auto,football
+Niger,NER,auto,football
+Nigeria,NGA,auto,football|nobel
+North Korea,PRK,manual,football
+North Macedonia,MKD,manual,eurovision|football
+Northern Cyprus,,excluded_non_fifa,football
+Northern Ireland,GB-NIR,manual,football|nobel
+Northern Mariana Islands,MNP,auto,football
+Norway,NOR,auto,eurovision|football|nobel
+Occitania,,excluded_non_fifa,football
+Oman,OMN,auto,football
+Orkney,,excluded_non_fifa,football
+Ottoman Empire (Republic of Macedonia),MKD,manual,nobel
+Ottoman Empire (Turkey),TUR,manual,nobel
+Padania,,excluded_non_fifa,football
+Pakistan,PAK,auto,football|nobel|nobel-modern
+Palestine,PSE,manual,football
+Panama,PAN,auto,football
+Panjab,,excluded_non_fifa,football
+Papua New Guinea,PNG,auto,football
+Paraguay,PRY,auto,football
+Parishes of Jersey,,excluded_non_fifa,football
+People's Republic of China,CHN,auto,nobel-modern
+Persia (Iran),IRN,manual,nobel
+Peru,PER,auto,football|nobel
+Philippines,PHL,auto,football
+Poland,POL,auto,eurovision|football|nobel|nobel-modern
+Poland (Belarus),BLR,auto,nobel
+Poland (Lithuania),LTU,auto,nobel
+Poland (Ukraine),UKR,auto,nobel
+Portugal,PRT,auto,eurovision|football|nobel
+Provence,,excluded_non_fifa,football
+Prussia (Germany),DEU,auto,nobel
+Prussia (Poland),POL,auto,nobel
+Prussia (Russia),RUS,manual,nobel
+Puerto Rico,PRI,auto,football
+Qatar,QAT,auto,football
+Quebec,,excluded_non_fifa,football
+Raetia,,excluded_non_fifa,football
+Republic of Ireland,IRL,manual,football
+Republic of Macedonia,MKD,manual,nobel-modern
+Rhodes,,excluded_non_fifa,football
+Romani people,,excluded_non_fifa,football
+Romania,ROU,auto,eurovision|football|nobel
+Rouet-Provence,,excluded_non_fifa,football
+Russia,RUS,manual,eurovision|football|nobel|nobel-modern
+Russian Empire (Azerbaijan),AZE,auto,nobel
+Russian Empire (Belarus),BLR,auto,nobel
+Russian Empire (Finland),FIN,auto,nobel
+Russian Empire (Latvia),LVA,auto,nobel
+Russian Empire (Lithuania),LTU,auto,nobel
+Russian Empire (Poland),POL,auto,nobel
+Russian Empire (Russia),RUS,manual,nobel
+Russian Empire (Ukraine),UKR,auto,nobel
+Rwanda,RWA,auto,football
+Ryūkyū,,excluded_non_fifa,football
+Réunion,REU,auto,football
+Saare County,,excluded_non_fifa,football
+Saint Barthélemy,BLM,auto,football
+Saint Helena,SHN,auto,football
+Saint Kitts and Nevis,KNA,manual,football
+Saint Lucia,LCA,manual,football|nobel|nobel-modern
+Saint Martin,MAF,auto,football
+Saint Pierre and Miquelon,SPM,auto,football
+Saint Vincent and the Grenadines,VCT,manual,football
+Samoa,WSM,auto,football
+San Marino,SMR,auto,eurovision|football
+Saudi Arabia,SAU,auto,football
+Saugeais,,excluded_non_fifa,football
+Schleswig (Germany),DEU,auto,nobel
+Scotland,GB-SCT,manual,football|nobel
+Sealand,,excluded_non_fifa,football
+Seborga,,excluded_non_fifa,football
+Senegal,SEN,auto,football
+Serbia,SRB,auto,eurovision|football
+Serbia & Montenegro,,manual,eurovision
+Seychelles,SYC,auto,football
+Shetland,,excluded_non_fifa,football
+Sierra Leone,SLE,auto,football
+Singapore,SGP,auto,football
+Sint Maarten,SXM,auto,football
+Slovakia,SVK,auto,eurovision|football|nobel-modern
+Slovenia,SVN,auto,eurovision|football|nobel-modern
+Solomon Islands,SLB,auto,football
+Somalia,SOM,auto,football
+Somaliland,,excluded_non_fifa,football
+South Africa,ZAF,auto,football|nobel
+South Korea,KOR,manual,football|nobel-modern
+South Ossetia,,excluded_non_fifa,football
+South Sudan,SSD,auto,football
+Southern Rhodesia (Zimbabwe),ZWE,auto,nobel
+Spain,ESP,auto,eurovision|football|nobel
+Sri Lanka,LKA,auto,football
+Sudan,SDN,auto,football
+Suriname,SUR,auto,football
+Surrey,,excluded_non_fifa,football
+Sweden,SWE,auto,eurovision|football|nobel
+Switzerland,CHE,auto,eurovision|football|nobel
+Syria,SYR,manual,football
+Székely Land,,excluded_non_fifa,football
+Sápmi,,excluded_non_fifa,football
+São Tomé and Príncipe,STP,manual,football
+Tahiti,PYF,manual,football
+Taiwan,TWN,manual,football|nobel
+Tajikistan,TJK,auto,football
+Tamil Eelam,,excluded_non_fifa,football
+Tanzania,TZA,manual,football
+Thailand,THA,auto,football
+The Netherlands,NLD,manual,eurovision
+Tibet,,excluded_non_fifa,football
+Tibet (People's Republic of China),CHN,auto,nobel
+Timor-Leste,TLS,manual,football
+Togo,TGO,auto,football
+Tonga,TON,auto,football
+Trinidad,TTO,manual,nobel
+Trinidad and Tobago,TTO,manual,football
+Tunisia,TUN,auto,football
+Turkey,TUR,manual,eurovision|football|nobel|nobel-modern
+Turkmenistan,TKM,auto,football
+Turks and Caicos Islands,TCA,manual,football
+Tuscany (Italy),ITA,auto,nobel
+Tuvalu,TUV,auto,football
+Two Sicilies,,excluded_non_fifa,football
+Uganda,UGA,auto,football
+Ukraine,UKR,auto,eurovision|football|nobel|nobel-modern
+Union of Soviet Socialist Republics,,manual,nobel
+Union of Soviet Socialist Republics (Belarus),BLR,auto,nobel
+Union of Soviet Socialist Republics (Russia),RUS,manual,nobel
+United Arab Emirates,ARE,auto,football
+United Kingdom,GBR,auto,eurovision|nobel
+United Koreans in Japan,,excluded_non_fifa,football
+United States,USA,manual,football
+United States Virgin Islands,VIR,manual,football
+United States of America,USA,auto,nobel
+Uruguay,URY,auto,football
+Uzbekistan,UZB,auto,football
+Vanuatu,VUT,auto,football
+Vatican City,,manual,football
+Venezuela,VEN,manual,football|nobel
+Vietnam,VNM,manual,football|nobel
+W&uuml;rttemberg (Germany),DEU,auto,nobel
+Wales,GB-WLS,manual,football
+West Germany (Germany),DEU,auto,nobel
+West Papua,,excluded_non_fifa,football
+Western Armenia,,excluded_non_fifa,football
+Western Isles,,excluded_non_fifa,football
+Western Sahara,ESH,auto,football
+Yemen,YEM,auto,football|nobel
+Ynys Môn,,excluded_non_fifa,football
+Yorkshire,,excluded_non_fifa,football
+Yoruba Nation,,excluded_non_fifa,football
+Yugoslavia,,manual,eurovision
+Zambia,ZMB,auto,football
+Zanzibar,,excluded_non_fifa,football
+Zimbabwe,ZWE,auto,football|nobel-modern
+"then Germany, now France",FRA,manual,nobel-modern
+Åland Islands,ALA,auto,football
+IOC:AFG,AFG,auto,olympics
+IOC:AHO,,manual,olympics
+IOC:ALB,ALB,auto,olympics
+IOC:ALG,DZA,auto,olympics
+IOC:AND,AND,auto,olympics
+IOC:ANG,AGO,auto,olympics
+IOC:ANT,ATG,auto,olympics
+IOC:ARG,ARG,auto,olympics
+IOC:ARM,ARM,auto,olympics
+IOC:ARU,ABW,auto,olympics
+IOC:ASA,ASM,auto,olympics
+IOC:AUS,AUS,auto,olympics
+IOC:AUT,AUT,auto,olympics
+IOC:AZE,AZE,auto,olympics
+IOC:BAH,BHS,auto,olympics
+IOC:BAN,BGD,auto,olympics
+IOC:BAR,BRB,auto,olympics
+IOC:BDI,BDI,auto,olympics
+IOC:BEL,BEL,auto,olympics
+IOC:BEN,BEN,auto,olympics
+IOC:BER,BMU,auto,olympics
+IOC:BHU,BTN,auto,olympics
+IOC:BIH,BIH,auto,olympics
+IOC:BIZ,BLZ,auto,olympics
+IOC:BLR,BLR,auto,olympics
+IOC:BOL,BOL,auto,olympics
+IOC:BOT,BWA,auto,olympics
+IOC:BRA,BRA,auto,olympics
+IOC:BRN,BHR,auto,olympics
+IOC:BRU,BRN,auto,olympics
+IOC:BUL,BGR,auto,olympics
+IOC:BUR,BFA,auto,olympics
+IOC:CAF,CAF,auto,olympics
+IOC:CAM,KHM,auto,olympics
+IOC:CAN,CAN,auto,olympics
+IOC:CAY,CYM,auto,olympics
+IOC:CGO,COG,auto,olympics
+IOC:CHA,TCD,auto,olympics
+IOC:CHI,CHL,auto,olympics
+IOC:CHN,CHN,auto,olympics
+IOC:CIV,CIV,auto,olympics
+IOC:CMR,CMR,auto,olympics
+IOC:COD,COD,auto,olympics
+IOC:COK,COK,auto,olympics
+IOC:COL,COL,auto,olympics
+IOC:COM,COM,auto,olympics
+IOC:COR,,manual,olympics
+IOC:CPV,CPV,auto,olympics
+IOC:CRC,CRI,auto,olympics
+IOC:CRO,HRV,auto,olympics
+IOC:CUB,CUB,auto,olympics
+IOC:CYP,CYP,auto,olympics
+IOC:CZE,CZE,auto,olympics
+IOC:DEN,DNK,auto,olympics
+IOC:DJI,DJI,auto,olympics
+IOC:DMA,DMA,auto,olympics
+IOC:DOM,DOM,auto,olympics
+IOC:ECU,ECU,auto,olympics
+IOC:EGY,EGY,auto,olympics
+IOC:EOR,,manual,olympics
+IOC:ERI,ERI,auto,olympics
+IOC:ESA,SLV,auto,olympics
+IOC:ESP,ESP,auto,olympics
+IOC:EST,EST,auto,olympics
+IOC:ETH,ETH,auto,olympics
+IOC:FIJ,FJI,auto,olympics
+IOC:FIN,FIN,auto,olympics
+IOC:FRA,FRA,auto,olympics
+IOC:FSM,FSM,auto,olympics
+IOC:GAB,GAB,auto,olympics
+IOC:GAM,GMB,auto,olympics
+IOC:GBR,GBR,auto,olympics
+IOC:GBS,GNB,auto,olympics
+IOC:GEO,GEO,auto,olympics
+IOC:GEQ,GNQ,auto,olympics
+IOC:GER,DEU,auto,olympics
+IOC:GHA,GHA,auto,olympics
+IOC:GRE,GRC,auto,olympics
+IOC:GRN,GRD,auto,olympics
+IOC:GUA,GTM,auto,olympics
+IOC:GUI,GIN,auto,olympics
+IOC:GUM,GUM,auto,olympics
+IOC:GUY,GUY,auto,olympics
+IOC:HAI,HTI,auto,olympics
+IOC:HKG,HKG,auto,olympics
+IOC:HON,HND,auto,olympics
+IOC:HUN,HUN,auto,olympics
+IOC:INA,IDN,auto,olympics
+IOC:IND,IND,auto,olympics
+IOC:IOA,,manual,olympics
+IOC:IRI,IRN,auto,olympics
+IOC:IRL,IRL,auto,olympics
+IOC:IRQ,IRQ,auto,olympics
+IOC:ISL,ISL,auto,olympics
+IOC:ISR,ISR,auto,olympics
+IOC:ISV,VIR,auto,olympics
+IOC:ITA,ITA,auto,olympics
+IOC:IVB,VGB,auto,olympics
+IOC:JAM,JAM,auto,olympics
+IOC:JOR,JOR,auto,olympics
+IOC:JPN,JPN,auto,olympics
+IOC:KAZ,KAZ,auto,olympics
+IOC:KEN,KEN,auto,olympics
+IOC:KGZ,KGZ,auto,olympics
+IOC:KIR,KIR,auto,olympics
+IOC:KOR,KOR,auto,olympics
+IOC:KOS,XKX,manual,olympics
+IOC:KSA,SAU,auto,olympics
+IOC:KUW,KWT,auto,olympics
+IOC:LAO,LAO,auto,olympics
+IOC:LAT,LVA,auto,olympics
+IOC:LBA,LBY,auto,olympics
+IOC:LBN,LBN,auto,olympics
+IOC:LBR,LBR,auto,olympics
+IOC:LCA,LCA,auto,olympics
+IOC:LES,LSO,auto,olympics
+IOC:LIE,LIE,auto,olympics
+IOC:LTU,LTU,auto,olympics
+IOC:LUX,LUX,auto,olympics
+IOC:MAD,MDG,auto,olympics
+IOC:MAR,MAR,auto,olympics
+IOC:MAS,MYS,auto,olympics
+IOC:MAW,MWI,auto,olympics
+IOC:MDA,MDA,auto,olympics
+IOC:MDV,MDV,auto,olympics
+IOC:MEX,MEX,auto,olympics
+IOC:MGL,MNG,auto,olympics
+IOC:MHL,MHL,auto,olympics
+IOC:MKD,MKD,auto,olympics
+IOC:MLI,MLI,auto,olympics
+IOC:MLT,MLT,auto,olympics
+IOC:MNE,MNE,auto,olympics
+IOC:MON,MCO,auto,olympics
+IOC:MOZ,MOZ,auto,olympics
+IOC:MRI,MUS,auto,olympics
+IOC:MTN,MRT,auto,olympics
+IOC:MYA,MMR,auto,olympics
+IOC:NAM,NAM,auto,olympics
+IOC:NCA,NIC,auto,olympics
+IOC:NED,NLD,auto,olympics
+IOC:NEP,NPL,auto,olympics
+IOC:NGR,NGA,auto,olympics
+IOC:NIG,NER,auto,olympics
+IOC:NOR,NOR,auto,olympics
+IOC:NRU,NRU,auto,olympics
+IOC:NZL,NZL,auto,olympics
+IOC:OMA,OMN,auto,olympics
+IOC:PAK,PAK,auto,olympics
+IOC:PAN,PAN,auto,olympics
+IOC:PAR,PRY,auto,olympics
+IOC:PER,PER,auto,olympics
+IOC:PHI,PHL,auto,olympics
+IOC:PLE,PSE,auto,olympics
+IOC:PLW,PLW,auto,olympics
+IOC:PNG,PNG,auto,olympics
+IOC:POL,POL,auto,olympics
+IOC:POR,PRT,auto,olympics
+IOC:PRK,PRK,auto,olympics
+IOC:PUR,PRI,manual,olympics
+IOC:QAT,QAT,auto,olympics
+IOC:ROC,RUS,manual,olympics
+IOC:ROU,ROU,auto,olympics
+IOC:RSA,ZAF,auto,olympics
+IOC:RUS,RUS,auto,olympics
+IOC:RWA,RWA,auto,olympics
+IOC:SAM,WSM,auto,olympics
+IOC:SCG,,manual,olympics
+IOC:SEN,SEN,auto,olympics
+IOC:SEY,SYC,auto,olympics
+IOC:SGP,SGP,auto,olympics
+IOC:SKN,KNA,auto,olympics
+IOC:SLE,SLE,auto,olympics
+IOC:SLO,SVN,auto,olympics
+IOC:SMR,SMR,auto,olympics
+IOC:SOL,SLB,auto,olympics
+IOC:SOM,SOM,auto,olympics
+IOC:SRB,SRB,auto,olympics
+IOC:SRI,LKA,auto,olympics
+IOC:SSD,SSD,manual,olympics
+IOC:STP,STP,auto,olympics
+IOC:SUD,SDN,auto,olympics
+IOC:SUI,CHE,auto,olympics
+IOC:SUR,SUR,auto,olympics
+IOC:SVK,SVK,auto,olympics
+IOC:SWE,SWE,auto,olympics
+IOC:SWZ,SWZ,auto,olympics
+IOC:SYR,SYR,auto,olympics
+IOC:TAN,TZA,auto,olympics
+IOC:TGA,TON,auto,olympics
+IOC:THA,THA,auto,olympics
+IOC:TJK,TJK,auto,olympics
+IOC:TKM,TKM,auto,olympics
+IOC:TLS,TLS,auto,olympics
+IOC:TOG,TGO,auto,olympics
+IOC:TPE,TWN,manual,olympics
+IOC:TTO,TTO,auto,olympics
+IOC:TUN,TUN,auto,olympics
+IOC:TUR,TUR,auto,olympics
+IOC:TUV,TUV,auto,olympics
+IOC:UAE,ARE,auto,olympics
+IOC:UGA,UGA,auto,olympics
+IOC:UKR,UKR,auto,olympics
+IOC:URU,URY,auto,olympics
+IOC:USA,USA,auto,olympics
+IOC:UZB,UZB,auto,olympics
+IOC:VAN,VUT,auto,olympics
+IOC:VEN,VEN,auto,olympics
+IOC:VIE,VNM,auto,olympics
+IOC:VIN,VCT,auto,olympics
+IOC:YEM,YEM,auto,olympics
+IOC:ZAM,ZMB,auto,olympics
+IOC:ZIM,ZWE,auto,olympics

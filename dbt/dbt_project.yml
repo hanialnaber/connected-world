@@ -1,0 +1,37 @@
+name: connected_world
+version: "1.0.0"
+config-version: 2
+profile: connected_world
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Latest values are taken from this window, so stale figures never mix with current ones.
+  latest_from_year: 2015
+  # Gapminder series include projections; anything after this year is ignored.
+  max_year: 2025
+  # Connections are only drawn with enough countries and a strict false-discovery threshold.
+  min_countries_per_link: 60
+  max_q_value: 0.01
+  min_partial_rho: 0.30
+
+models:
+  connected_world:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+
+seeds:
+  connected_world:
+    +schema: reference

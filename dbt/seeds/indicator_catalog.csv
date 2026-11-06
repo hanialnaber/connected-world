@@ -1,0 +1,28 @@
+indicator,label,short_label,domain,unit,source,transform,in_network
+gdp_pcap,GDP per person (PPP),Income,Wealth,"int'l $, 2017 prices",Gapminder,log,true
+gini,Income inequality (Gini),Inequality,Wealth,index 0 to 100,Gapminder,none,true
+ne_trd_gnfs_zs,Trade as share of GDP,Trade openness,Wealth,% of GDP,World Bank,log,true
+bx_trf_pwkr_dt_gd_zs,Remittances received,Remittances,Wealth,% of GDP,World Bank,log1p,true
+gb_xpd_rsdv_gd_zs,R&D spending,R&D,Wealth,% of GDP,World Bank,log,true
+pop,Population,Population,People,people,Gapminder,log,true
+en_pop_dnst,Population density,Density,People,people per km²,World Bank,log,true
+sp_urb_totl_in_zs,Urban population,Urbanisation,People,% of population,World Bank,none,true
+children_per_woman_total_fertility,Fertility rate,Fertility,People,births per woman,Gapminder,none,true
+sp_pop_65up_to_zs,Population aged 65+,Aged 65+,People,% of population,World Bank,none,true
+immigrant_pc,Immigrants as share of population,Immigrants,People,% of population,Gapminder,log,true
+lex,Life expectancy,Life expectancy,Health,years,Gapminder,none,true
+child_mortality_0_5_year_olds_dying_per_1000_born,Child mortality (under 5),Child mortality,Health,per 1000 births,Gapminder,log,true
+sh_xpd_chex_pp_cd,Health spending per person,Health spending,Health,"int'l $, PPP",World Bank,log,true
+sh_med_phys_zs,Physicians,Doctors,Health,per 1000 people,World Bank,log,true
+hapiscore_whr,Life evaluation (happiness),Happiness,Wellbeing,score 0 to 100,Gapminder (World Happiness Report),none,true
+it_net_user_zs,Internet users,Internet,Technology,% of population,World Bank,none,true
+it_cel_sets_p2,Mobile subscriptions,Mobile,Technology,per 100 people,World Bank,none,true
+eg_elc_accs_zs,Access to electricity,Electricity access,Technology,% of population,World Bank,none,true
+co2_per_capita,CO2 emissions per person,CO2 per person,Environment,tonnes,Our World in Data,log,true
+energy_per_capita,Energy use per person,Energy use,Environment,kWh,Our World in Data,log,true
+renewables_share_elec,Renewables share of electricity,Renewable power,Environment,% of electricity,Our World in Data,none,true
+ag_lnd_frst_zs,Forest area,Forest cover,Environment,% of land,World Bank,none,true
+olympic_medals_per_million,Summer Olympic medals per million people (2000 to 2020),Olympic medals,Sport,medals per million,Olympedia,log1p,true
+football_elo,Football strength (Elo rating),Football,Sport,Elo points,International results (Elo computed here),none,true
+passport_power,Passport power (destinations without a prior visa),Passport power,Mobility,destinations,Passport Index,none,true
+passport_openness,Openness (passports admitted without a prior visa),Openness,Mobility,passports,Passport Index,none,true

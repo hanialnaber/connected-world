@@ -1,0 +1,16 @@
+connected_world:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('CONNECTED_WORLD_WAREHOUSE', '../data/warehouse.duckdb') }}"
+      threads: 4
+    # The SQL models run unchanged on Databricks by switching adapters (dbt-databricks);
+    # the three Python models run there as PySpark/pandas models.
+    # databricks:
+    #   type: databricks
+    #   host: "{{ env_var('DATABRICKS_HOST') }}"
+    #   http_path: "{{ env_var('DATABRICKS_HTTP_PATH') }}"
+    #   token: "{{ env_var('DATABRICKS_TOKEN') }}"
+    #   catalog: connected_world
+    #   schema: analytics

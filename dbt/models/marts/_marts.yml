@@ -1,0 +1,78 @@
+version: 2
+models:
+  - name: dim_country
+    description: Conformed country dimension (Gapminder entities, ISO 3166 alpha-3).
+    columns:
+      - name: iso3
+        tests: [unique, not_null]
+  - name: mart_connection_pairs
+    description: Spearman and income-controlled partial correlations for every indicator pair (Python model).
+    config:
+      min_countries: "{{ var('min_countries_per_link') }}"
+      max_q: "{{ var('max_q_value') }}"
+      min_partial: "{{ var('min_partial_rho') }}"
+    columns:
+      - name: rho
+        tests:
+          - between: {arguments: {min_value: -1, max_value: 1}}
+      - name: partial_rho
+        tests:
+          - between: {arguments: {min_value: -1, max_value: 1}}
+      - name: q_partial
+        tests:
+          - between: {arguments: {min_value: 0, max_value: 1}}
+  - name: mart_overperformers
+    columns:
+      - name: model
+        tests:
+          - accepted_values: {arguments: {values: ['happiness', 'olympics', 'football', 'passports', 'health']}}
+      - name: iso3
+        tests:
+          - relationships: {arguments: {to: ref('dim_country'), field: iso3}}
+      - name: r_squared
+        tests:
+          - between: {arguments: {min_value: 0.1, max_value: 1}}
+  - name: mart_happiness
+    columns:
+      - name: iso3
+        tests: [unique]
+      - name: happiness
+        tests:
+          - between: {arguments: {min_value: 0, max_value: 100}}
+  - name: mart_olympics
+    columns:
+      - name: iso3
+        tests: [unique]
+      - name: medals
+        tests:
+          - between: {arguments: {min_value: 0, max_value: 1000}}
+  - name: mart_football
+    columns:
+      - name: team
+        tests: [unique, not_null]
+  - name: mart_passports
+    columns:
+      - name: iso3
+        tests: [unique]
+  - name: mart_bigmac
+    columns:
+      - name: iso3
+        tests: [unique]
+      - name: big_macs_per_day_of_income
+        tests:
+          - between: {arguments: {min_value: 0.5, max_value: 500}}
+  - name: mart_health
+    columns:
+      - name: life_expectancy
+        tests:
+          - between: {arguments: {min_value: 30, max_value: 95}}
+  - name: mart_eurovision_pairs
+    columns:
+      - name: avg_points
+        tests:
+          - between: {arguments: {min_value: 0, max_value: 24}}
+  - name: mart_energy
+    columns:
+      - name: solar_wind_latest
+        tests:
+          - between: {arguments: {min_value: 0, max_value: 100}}

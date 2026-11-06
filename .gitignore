@@ -1,0 +1,10 @@
+# data is never committed: `python -m pipeline extract` downloads it from the publishers
+data/
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/.user.yml
+logs/
+__pycache__/
+*.pyc
+.venv/

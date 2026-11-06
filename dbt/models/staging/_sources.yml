@@ -1,0 +1,17 @@
+version: 2
+sources:
+  - name: bronze
+    description: Typed Parquet landed by pipeline/extract.py, one file per source, with _source_file and _loaded_at lineage columns.
+    tables:
+      - {name: gapminder_datapoints, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/gapminder_datapoints.parquet"}}
+      - {name: gapminder_countries, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/gapminder_countries.parquet"}}
+      - {name: wdi_datapoints, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/wdi_datapoints.parquet"}}
+      - {name: owid_co2, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/owid_co2.parquet"}}
+      - {name: owid_energy, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/owid_energy.parquet"}}
+      - {name: football, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/football.parquet"}}
+      - {name: olympics, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/olympics.parquet"}}
+      - {name: eurovision, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/eurovision.parquet"}}
+      - {name: nobel, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/nobel.parquet"}}
+      - {name: passports, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/passports.parquet"}}
+      - {name: bigmac, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/bigmac.parquet"}}
+      - {name: countries, meta: {external_location: "{{ env_var('CONNECTED_WORLD_BRONZE', '../data/bronze') }}/countries.parquet"}}

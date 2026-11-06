@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Connected World · Hani Al Naber</title>
+<meta name="description" content="A data engineering project joining 11 open datasets on 170 countries, from every international football match since 1872 to Big Mac prices and Nobel prizes, to find which things are really connected once income is held fixed.">
+<link rel="canonical" href="https://hani-alnaber.com/connected">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Connected World · Hani Al Naber">
+<meta property="og:description" content="11 open datasets, 170 countries, 351 tested connections. Which ones survive once you account for money, and how the pipeline was built.">
+<meta property="og:url" content="https://hani-alnaber.com/connected">
+<meta property="og:image" content="https://hani-alnaber.com/opengraph-image">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#04060B">
+<link rel="icon" href="/favicon.ico">
+<script src="/insights.js" defer data-website="__UMAMI_WEBSITE_ID__"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --night:#04060B;--deep:#0A1122;--panel:rgba(10,17,34,.93);--solid:#0A1122;--solid2:#0E1830;
+  --hair:rgba(255,236,200,.12);--hair2:rgba(255,236,200,.22);--grid:rgba(255,236,200,.07);
+  --head:#F4EFE6;--body:#C9CDD8;--muted:#8E95A6;--gold:#F2C46B;--gsoft:rgba(242,196,107,.12);
+  /* data colours: validated pair for the dark surface (dataviz six-checks: all pass) */
+  --d-gold:#B9892F;--d-blue:#5A8CF0;--d-hi:#F2C46B;
+  --fd:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --fb:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --fm:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --g:clamp(16px,4.2vw,64px);--hh:64px;--maxw:1180px;--ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box}
+html{background:var(--night);-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--night);color:var(--body);font:400 17px/1.65 var(--fb);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+p{margin:0 0 1em}
+::selection{background:var(--gold);color:#04060B}
+:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+.wrap{width:min(var(--maxw),calc(100% - 2*var(--g)));margin:0 auto}
+.mono{font-family:var(--fm)}
+
+/* header (mirrors the homepage) */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:40;height:var(--hh);display:flex;align-items:center;gap:28px;padding:0 var(--g);background:var(--night);border-bottom:1px solid var(--hair)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--head);flex:none}
+.brand .mark{width:22px;height:22px;fill:var(--muted)}
+.brand .mark .gd{fill:var(--gold)}
+.brand-name{font:800 14px/1 var(--fd);font-stretch:125%;letter-spacing:-.01em;text-transform:uppercase;white-space:nowrap}
+.nav{display:flex;gap:26px;margin-left:auto}
+.nav a{font:500 12px/1 var(--fm);letter-spacing:.13em;text-transform:uppercase;color:var(--body);text-decoration:none;padding:8px 0;background:linear-gradient(var(--gold),var(--gold)) 0 100%/0 1px no-repeat;transition:background-size .35s var(--ease),color .25s}
+.nav a:hover{color:var(--head);background-size:100% 1px}
+.hdr-act{display:flex;align-items:center;gap:10px;flex:none}
+.hbtn{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:3px;font:600 14px/1 var(--fb);text-decoration:none;border:1px solid var(--hair2);color:var(--head)}
+.hbtn.talk{background:var(--gold);color:#04060B;border-color:var(--gold)}
+.hbtn:hover{border-color:var(--gold)}
+
+/* type */
+.kick{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;font:500 12px/1.3 var(--fm);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 22px}
+.kick::before{content:'';width:26px;height:1px;background:var(--gold);flex:none}
+.kick b{color:var(--gold);font-weight:500}
+h1,.h1{font:800 clamp(40px,6.2vw,86px)/.98 var(--fd);font-stretch:125%;letter-spacing:-.045em;color:var(--head);margin:0 0 28px}
+.h2{font:780 clamp(30px,3.4vw,50px)/1.04 var(--fd);font-stretch:125%;letter-spacing:-.038em;color:var(--head);margin:0 0 22px}
+.h3{font:700 clamp(21px,2vw,27px)/1.15 var(--fd);font-stretch:112%;letter-spacing:-.02em;color:var(--head);margin:0 0 12px}
+.gl{color:var(--gold)}
+.lead{font-size:clamp(18px,1.6vw,21px);line-height:1.6;color:var(--body);max-width:760px}
+.muted{color:var(--muted)}
+.small{font-size:14px;line-height:1.55}
+.note{font:500 12px/1.6 var(--fm);letter-spacing:.04em;color:var(--muted)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 22px;border-radius:3px;border:1px solid transparent;font:600 15.5px/1.1 var(--fb);text-decoration:none;cursor:pointer;transition:background .25s,box-shadow .3s,border-color .25s}
+.btn-gold{background:var(--gold);color:#04060B}
+.btn-gold:hover{background:#F8D58F;box-shadow:0 0 0 1px rgba(242,196,107,.35),0 14px 44px -10px rgba(242,196,107,.6)}
+.btn-line{border-color:rgba(242,196,107,.45);color:var(--head);background:rgba(4,6,11,.35)}
+.btn-line:hover{border-color:var(--gold)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin:30px 0 0}
+
+/* hero */
+.hero{padding:calc(var(--hh) + 11vh) 0 7vh;position:relative}
+.hero::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(60% 50% at 82% 18%,rgba(242,196,107,.10),transparent 70%),radial-gradient(40% 40% at 10% 90%,rgba(90,140,240,.07),transparent 70%)}
+.runline{margin-top:34px;display:flex;flex-wrap:wrap;gap:6px 16px;font:500 12.5px/1.6 var(--fm);color:var(--muted)}
+.runline b{color:var(--head);font-weight:500}
+.runline .ok{color:#7FD6A4}
+
+/* KPI tiles */
+.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair);margin:6vh 0 0}
+.tile{background:var(--night);padding:22px 20px 20px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.tile .lbl{font:500 11.5px/1.35 var(--fm);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tile .val{font:700 clamp(28px,2.6vw,38px)/1.05 var(--fb);color:var(--head);letter-spacing:-.02em}
+.tile .val.gold{color:var(--gold)}
+.tile .dl{font-size:14px;line-height:1.45;color:var(--body)}
+
+/* sections */
+.sec{padding:13vh 0 4vh;border-top:1px solid var(--hair)}
+.sec-head{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:24px 64px;align-items:end;margin-bottom:6vh}
+.sec-head .lead{margin:0}
+.finding{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:28px 56px;align-items:start;padding:6vh 0;border-top:1px solid var(--hair)}
+.finding:first-of-type{border-top:0;padding-top:0}
+.fnum{font:500 12px/1 var(--fm);letter-spacing:.16em;color:var(--gold);margin-bottom:16px}
+.finding p{color:var(--body)}
+.finding .src{font:500 11.5px/1.55 var(--fm);color:var(--muted);margin-top:14px}
+
+/* chart cards */
+.card{background:var(--panel);border:1px solid var(--hair);padding:20px 20px 12px;position:relative;min-width:0}
+.card-t{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px}
+.card-t h4{margin:0;font:600 15px/1.35 var(--fb);color:var(--head)}
+.card-t span{font:500 11.5px/1.3 var(--fm);color:var(--muted);text-align:right}
+.chart{position:relative;width:100%;min-height:200px}
+.chart svg{display:block;width:100%;overflow:visible}
+.chart text{font-family:var(--fm);font-size:11px;fill:var(--muted)}
+.chart text.vl{fill:var(--head);font-size:11.5px;font-weight:500}
+.chart text.an{fill:var(--body);font-size:11px}
+.chart .mk{cursor:default;transition:opacity .2s}
+.chart .mk:focus{outline:none}
+.chart .mk:hover,.chart .mk:focus{filter:brightness(1.25)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font:500 12px/1.4 var(--fm);color:var(--body);margin:2px 0 8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:7px;vertical-align:-1px}
+.tip{position:absolute;z-index:5;pointer-events:none;background:#0E1830;border:1px solid var(--hair2);padding:9px 11px;min-width:150px;box-shadow:0 18px 40px -16px rgba(0,0,0,.8);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.tip.on{opacity:1;transform:none}
+.tip .tv{font:600 15px/1.25 var(--fb);color:var(--head)}
+.tip .tl{font:500 11.5px/1.4 var(--fm);color:var(--muted);margin-top:2px}
+.tip .tr{display:flex;align-items:center;gap:8px;font:500 12.5px/1.5 var(--fb);color:var(--body);margin-top:4px}
+.tip .tr i{width:12px;height:2px;flex:none}
+.tip .tr b{color:var(--head);font-weight:600;margin-left:auto;padding-left:10px}
+details.tv{margin-top:6px;border-top:1px solid var(--hair)}
+details.tv summary{cursor:pointer;list-style:none;font:500 11.5px/1 var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 0 6px}
+details.tv summary::-webkit-details-marker{display:none}
+details.tv summary::before{content:'+ ';color:var(--gold)}
+details.tv[open] summary::before{content:'– '}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--hair);white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font:500 11px/1.3 var(--fm);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td{color:var(--body)}
+td.nm{color:var(--head);white-space:normal;min-width:180px}
+td.nm small{display:block;font:500 11px/1.4 var(--fm);color:var(--muted)}
+.ib{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.ib span{display:block;height:8px;border-radius:0 4px 4px 0;background:var(--d-gold);min-width:2px}
+.chg{font-variant-numeric:tabular-nums}
+
+/* two-up grid */
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+
+/* compare */
+.versus{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair);margin-bottom:18px}
+.versus div{background:var(--night);padding:18px 18px 16px}
+.versus .lbl{font:500 11.5px/1.3 var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.versus .val{font:700 clamp(30px,3vw,42px)/1.1 var(--fb);color:var(--head);margin:6px 0 4px}
+.versus .dl{font-size:14px;color:var(--body)}
+
+/* build */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:4vh 0 3vh;position:relative}
+.step{background:var(--panel);border:1px solid var(--hair);padding:18px 16px 16px;position:relative;min-width:0}
+.step::after{content:'→';position:absolute;right:-13px;top:22px;color:var(--gold);font:500 14px/1 var(--fm);z-index:2}
+.step:last-child::after{display:none}
+.step .sn{font:500 11px/1 var(--fm);letter-spacing:.14em;color:var(--gold)}
+.step h4{margin:10px 0 4px;font:700 19px/1.15 var(--fd);font-stretch:112%;color:var(--head)}
+.step .tool{font:500 11.5px/1.4 var(--fm);color:var(--muted);margin-bottom:10px}
+.step ul{margin:0;padding:0;list-style:none;font-size:14px;line-height:1.5;color:var(--body)}
+.step li{padding:3px 0 3px 14px;position:relative}
+.step li::before{content:'';position:absolute;left:0;top:11px;width:5px;height:1px;background:var(--gold)}
+.srcs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 4vh}
+.srcs span{font:500 12px/1 var(--fm);color:var(--body);border:1px solid var(--hair);padding:9px 11px;background:rgba(4,6,11,.35)}
+.srcs span b{color:var(--gold);font-weight:500;margin-right:6px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair);margin:0 0 5vh}
+.stats div{background:var(--night);padding:18px}
+.stats b{display:block;font:700 28px/1.1 var(--fb);color:var(--head)}
+.stats span{font:500 11.5px/1.4 var(--fm);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+pre.code{margin:0;background:#070B16;border:1px solid var(--hair);padding:16px 18px;overflow:auto;font:400 13px/1.65 var(--fm);color:#C9CDD8}
+pre.code .c{color:#6F778A}
+pre.code .k{color:var(--gold)}
+.decisions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 40px;margin:0;padding:0;list-style:none}
+.decisions li{border-top:1px solid var(--hair);padding:14px 0 4px}
+.decisions b{display:block;color:var(--head);font:600 16px/1.35 var(--fb);margin-bottom:4px}
+.decisions span{font-size:15px;line-height:1.6;color:var(--body)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:16px 0 0}
+.tags li{font:500 11.5px/1 var(--fm);letter-spacing:.06em;color:var(--body);border:1px solid var(--hair);padding:7px 10px;background:rgba(4,6,11,.35)}
+.srclist{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.srclist li{border-top:1px solid var(--hair);padding-top:12px;font-size:15px}
+.srclist b{color:var(--head);font-weight:600}
+.srclist a{color:var(--gold);text-decoration:none;word-break:break-word}
+.srclist .lic{font:500 11.5px/1.4 var(--fm);color:var(--muted)}
+
+.foot{margin:12vh auto 0;padding:24px 0 34px;border-top:1px solid var(--hair);display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;font:500 11.5px/1.5 var(--fm);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.foot a{color:var(--body);text-decoration:none}
+.foot nav{display:flex;flex-wrap:wrap;gap:8px 20px}
+
+/* motion */
+.rv{opacity:0;transform:translateY(16px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
+
+/* responsive */
+@media (max-width:1080px){
+  .tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .step::after{display:none}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  :root{--hh:58px}
+  .nav,.hbtn.pdf{display:none}
+  .finding,.sec-head,.two,.decisions{grid-template-columns:minmax(0,1fr)}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero{padding-top:calc(var(--hh) + 7vh)}
+  .sec{padding-top:9vh}
+}
+@media (max-width:520px){
+  .flow{grid-template-columns:minmax(0,1fr)}
+  .tiles .tile:last-child{grid-column:1/-1}
+  .versus .val{font-size:28px}
+  .card{padding:16px 12px 8px}
+  table{font-size:13px}
+}
+
+/* ---- Connected World additions ---- */
+.flow{grid-template-columns:repeat(6,minmax(0,1fr))}
+.net-wrap{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.65fr);gap:24px;align-items:start}
+.net{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.net .nd{cursor:pointer}
+.net .nd text{font-family:var(--fb);font-size:12px;fill:var(--body)}
+.net .nd.dim{opacity:.18}
+.net .eg{transition:opacity .2s}
+.net .eg.dim{opacity:.06}
+.links{list-style:none;margin:0;padding:0;counter-reset:l}
+.links li{border-top:1px solid var(--hair);padding:12px 0 12px 34px;position:relative;font-size:15px;line-height:1.5;cursor:default}
+.links li::before{counter-increment:l;content:counter(l,decimal-leading-zero);position:absolute;left:0;top:14px;font:500 11px/1 var(--fm);color:var(--gold);letter-spacing:.1em}
+.links li b{color:var(--head);font-weight:600}
+.links li span{display:block;font:500 11.5px/1.5 var(--fm);color:var(--muted);margin-top:2px}
+.links li:hover b{color:var(--gold)}
+.big{font:800 clamp(56px,8vw,112px)/.9 var(--fd);font-stretch:125%;letter-spacing:-.05em;color:var(--gold);margin:0 0 10px}
+.stories .finding{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+.pairs{list-style:none;margin:14px 0 0;padding:0}
+.pairs li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;border-top:1px solid var(--hair);padding:9px 0;font-size:14.5px}
+.pairs li b{color:var(--head);font-weight:600}
+.pairs li span{font:500 12px/1.6 var(--fm);color:var(--muted);text-align:right}
+.chart .lbl{font-family:var(--fb);font-size:12px;fill:var(--head);paint-order:stroke;stroke:#0A1122;stroke-width:3px;stroke-linejoin:round}
+.chart .axl{font-family:var(--fm);font-size:11px;fill:var(--muted)}
+.cov td:last-child{color:var(--head)}
+@media (max-width:1080px){.net-wrap{grid-template-columns:minmax(0,1fr)}.flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.stories .finding{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:520px){.flow{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<a class="sr-only" href="#main" style="position:absolute;left:-999px">Skip to content</a>
+<header class="hdr" role="banner">
+  <a class="brand" href="/" aria-label="Hani Al Naber, home">
+    <svg class="mark" viewBox="0 0 26 26" aria-hidden="true"><circle cx="5" cy="5" r="2"/><circle cx="13" cy="5" r="2"/><circle cx="21" cy="5" r="2"/><circle cx="5" cy="13" r="2"/><circle class="gd" cx="13" cy="13" r="2.6"/><circle cx="21" cy="13" r="2"/><circle cx="5" cy="21" r="2"/><circle cx="13" cy="21" r="2"/><circle cx="21" cy="21" r="2"/></svg>
+    <span class="brand-name">Hani Al Naber</span>
+  </a>
+  <nav class="nav" aria-label="Page sections">
+    <a href="#connections">Connections</a><a href="#stories">Stories</a><a href="#build">How it's built</a><a href="#sources">Sources</a>
+  </nav>
+  <div class="hdr-act">
+    <a class="hbtn pdf" href="/resume.pdf" target="_blank" rel="noopener" data-event="resume_download">Résumé PDF</a>
+    <a class="hbtn talk" href="mailto:hanialnaber@gmail.com" data-event="contact_click">Let’s talk</a>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero wrap">
+  <p class="kick rv"><b>Project</b><span>Connected World</span></p>
+  <h1 class="rv">The world,<br><span class="gl">connected.</span></h1>
+  <p class="lead rv" id="h-lead">I joined 11 open datasets on 170 countries, from every international football match since 1872 to Big Mac prices and Nobel prizes, then tested which statistics really move together once you account for money.</p>
+  <div class="actions rv">
+    <a class="btn btn-gold" href="#connections">See the connections</a>
+    <a class="btn btn-line" href="#build">How it’s built ↓</a>
+  </div>
+  <p class="runline rv" id="runline"></p>
+  <div class="tiles rv" id="tiles" aria-label="Headline numbers"></div>
+</section>
+
+<section class="sec wrap" id="connections" aria-labelledby="c-title">
+  <div class="sec-head">
+    <div><p class="kick"><b>01</b><span>The big picture</span></p><h2 class="h2" id="c-title">Most things that look connected are really about <span class="gl">money.</span></h2></div>
+    <p class="lead" id="t-conn"></p>
+  </div>
+  <div class="net-wrap rv">
+    <div class="card"><div class="card-t"><h4>What moves together across countries</h4><span>hover a statistic</span></div>
+      <div class="legend" id="lg-net"></div>
+      <div class="chart net" id="c-net"></div>
+      <details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-net"></div></details>
+    </div>
+    <div>
+      <p class="big" id="k-share"></p>
+      <p id="t-share"></p>
+      <h3 class="h3" style="margin-top:26px">Links that survive once income is held fixed</h3>
+      <ol class="links" id="links"></ol>
+      <p class="note" style="margin-top:14px">Partial rank correlation controlling for GDP per person; Benjamini-Hochberg q &lt; 0.01; at least 60 countries. Association, not cause.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec wrap stories" id="stories" aria-labelledby="s-title">
+  <div class="sec-head">
+    <div><p class="kick"><b>02</b><span>Ten connected stories</span></p><h2 class="h2" id="s-title">Who beats the odds, and <span class="gl">by how much.</span></h2></div>
+    <p class="lead">Each story joins at least two sources. Where a model is involved, “expected” means what a country’s population and income predict across all countries, so the outliers stand out.</p>
+  </div>
+
+  <div class="finding rv" id="s-happy">
+    <div><p class="fnum">01 · Wealth × happiness</p><h3 class="h3" id="h-happy"></h3><p id="t-happy"></p><p class="src">Gapminder (World Happiness Report life evaluations, GDP per person at PPP)</p></div>
+    <div class="card"><div class="card-t"><h4>Life evaluation vs income</h4><span>each dot a country · log scale</span></div><div class="chart" id="c-happy"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-happy"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-oly">
+    <div><p class="fnum">02 · Sport × size × wealth</p><h3 class="h3" id="h-oly"></h3><p id="t-oly"></p><p class="src">Olympedia results, Summer Games 2000 to 2020 · Gapminder population and income</p></div>
+    <div class="card"><div class="card-t"><h4>Medals won vs medals expected</h4><span>Summer Games 2000 to 2020</span></div><div class="legend" id="lg-oly"></div><div class="chart" id="c-oly"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-oly"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-foot">
+    <div><p class="fnum">03 · Football × population</p><h3 class="h3" id="h-foot"></h3><p id="t-foot"></p><p class="src">International results since 1872 (Elo computed in this pipeline) · Gapminder population</p></div>
+    <div class="card"><div class="card-t"><h4>Football strength vs population</h4><span>Elo rating · log scale</span></div><div class="chart" id="c-foot"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-foot"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-pass">
+    <div><p class="fnum">04 · Mobility × wealth</p><h3 class="h3" id="h-pass"></h3><p id="t-pass"></p><p class="src">Passport Index data, February 2026 · Gapminder income</p></div>
+    <div class="card"><div class="card-t"><h4>Destinations open without a prior visa vs income</h4><span>log scale</span></div><div class="chart" id="c-pass"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-pass"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-mac">
+    <div><p class="fnum">05 · Prices × income</p><h3 class="h3" id="h-mac"></h3><p id="t-mac"></p><p class="src">The Economist, Big Mac index (price and GDP per person, same survey)</p></div>
+    <div class="card"><div class="card-t"><h4>Big Macs bought by a day of GDP per person</h4><span id="c-mac-sub"></span></div><div class="chart" id="c-mac"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-mac"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-nobel">
+    <div><p class="fnum">06 · Science × migration</p><h3 class="h3" id="h-nobel"></h3><p id="t-nobel"></p><ul class="pairs" id="nobel-flows"></ul><p class="src">Nobel Prize data, 1901 to 2016 (Physics, Chemistry, Medicine), present-day borders</p></div>
+    <div class="card"><div class="card-t"><h4>Laureates born in a country vs working there when they won</h4><span>science prizes</span></div><div class="legend" id="lg-nobel"></div><div class="chart" id="c-nobel"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-nobel"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-euro">
+    <div><p class="fnum">07 · Music × geography × language</p><h3 class="h3" id="h-euro"></h3><p id="t-euro"></p><ul class="pairs" id="euro-pairs"></ul><p class="src">Eurovision finals 1975 to 2022 · borders and languages from mledoze/countries</p></div>
+    <div class="card"><div class="card-t"><h4>Average points given per final</h4><span>pairs with 10+ finals together</span></div><div class="chart" id="c-euro"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-euro"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-dec">
+    <div><p class="fnum">08 · Growth × emissions</p><h3 class="h3" id="h-dec"></h3><p id="t-dec"></p><p class="src">Our World in Data, CO2 dataset (GDP, territorial and consumption-based CO2)</p></div>
+    <div class="card"><div class="card-t"><h4>Change in GDP vs change in CO2, 2005 to <span id="dec-yr"></span></h4><span id="dec-sub">countries of 1M+</span></div><div class="chart" id="c-dec"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-dec"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-energy">
+    <div><p class="fnum">09 · Energy × time</p><h3 class="h3" id="h-energy"></h3><p id="t-energy"></p><p class="src">Our World in Data, energy dataset (Ember, Energy Institute)</p></div>
+    <div class="card"><div class="card-t"><h4>Solar and wind share of electricity</h4><span>2015 → latest · fastest risers</span></div><div class="legend" id="lg-energy"></div><div class="chart" id="c-energy"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-energy"></div></details></div>
+  </div>
+
+  <div class="finding rv" id="s-health">
+    <div><p class="fnum">10 · Health spending × lifespan</p><h3 class="h3" id="h-health"></h3><p id="t-health"></p><p class="src">World Bank health expenditure per person (PPP) · Gapminder life expectancy</p></div>
+    <div class="card"><div class="card-t"><h4>Life expectancy vs health spending per person</h4><span>log scale</span></div><div class="chart" id="c-health"></div><details class="tv"><summary>Data table</summary><div class="tblwrap" id="tb-health"></div></details></div>
+  </div>
+</section>
+
+<section class="sec wrap" id="build" aria-labelledby="b-title">
+  <div class="sec-head">
+    <div><p class="kick"><b>03</b><span>How I built it</span></p><h2 class="h2" id="b-title">Eleven sources,<br><span class="gl">one tested model.</span></h2></div>
+    <p class="lead">The hard part is not the charts. It is making 11 sources agree on what a country is, rebuilding ratings from raw results, and proving every number before it ships. The patterns are the ones I use on a production financial data platform.</p>
+  </div>
+  <div class="flow rv" id="flow"></div>
+  <div class="stats rv" id="stats"></div>
+  <div class="two rv">
+    <div>
+      <h3 class="h3">Rules that keep it honest.</h3>
+      <ul class="decisions" style="grid-template-columns:1fr">
+        <li><b>Hold income fixed.</b><span>Rich countries score higher on almost everything, so every link is also tested as a partial correlation controlling for GDP per person. Only links that survive are drawn.</span></li>
+        <li><b>Correct for testing 351 pairs.</b><span>Benjamini-Hochberg false-discovery control (q &lt; 0.01), at least 60 countries per link, countries under 500,000 people left out.</span></li>
+        <li><b>One country, one key.</b><span>A 605-entry crosswalk maps football teams, Olympic codes, Eurovision names and historical birthplaces (“Prussia (Poland)”) to ISO codes. A test fails the build if coverage drops.</span></li>
+        <li><b>Count like the scorekeepers.</b><span>A relay gold is one medal, not four; Youth Olympic events are excluded; only FIFA-recognised teams are rated, so regional sides never enter the Elo pool.</span></li>
+        <li><b>Latest, but not stale.</b><span>Each country uses its latest value from 2015 onwards; projections in the source series are ignored.</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="h3">Every source, mapped.</h3>
+      <p>Rows per source after staging, and the share that maps onto the country dimension (the rest is excluded on purpose: historical states and non-FIFA teams).</p>
+      <div class="card cov" style="padding:6px 14px 4px"><div class="tblwrap" id="tb-cov"></div></div>
+      <p class="note" style="margin-top:14px">dbt Python model excerpt, the partial correlation:</p>
+<pre class="code"><span class="c"># mart_connection_pairs.py (excerpt)</span>
+ra, rb, ri = (d[c].rank() <span class="k">for</span> c <span class="k">in</span> (a, b, income))
+ea, eb = residual(ra, ri), residual(rb, ri)
+partial = np.corrcoef(ea, eb)[0, 1]</pre>
+    </div>
+  </div>
+  <ul class="tags rv" aria-label="Stack">
+    <li>Python</li><li>SQL</li><li>DuckDB</li><li>dbt (SQL + Python models)</li><li>Parquet</li><li>pandas / NumPy / SciPy</li><li>Airflow DAG</li><li>GitHub Actions</li><li>Databricks-ready</li>
+  </ul>
+  <div class="actions rv">
+    <a class="btn btn-gold" href="https://github.com/hanialnaber/connected-world" target="_blank" rel="noopener" data-event="repo_click">View the code on GitHub ↗</a>
+    <a class="btn btn-line" href="mailto:hanialnaber@gmail.com?subject=Connected%20World" data-event="contact_click">Talk to me about it</a>
+  </div>
+</section>
+
+<section class="sec wrap" id="sources" aria-labelledby="src-title">
+  <p class="kick"><b>04</b><span>Sources and licences</span></p>
+  <h2 class="h2" id="src-title" style="font-size:clamp(26px,2.6vw,36px)">Every number has an origin.</h2>
+  <ul class="srclist" id="srclist"></ul>
+  <p class="note" style="margin-top:24px">Independent portfolio project built only from public open data. Figures are my own aggregations and models, provided as-is; they are not official statistics, and where they differ the publishers’ figures prevail. Correlations show association, not cause. Country names follow the source data. Not affiliated with or endorsed by any data publisher. Spotted an error? Email <a href="mailto:hanialnaber@gmail.com?subject=Connected%20World%20correction">hanialnaber@gmail.com</a> and I will correct it.</p>
+</section>
+</main>
+
+<footer class="foot wrap">
+  <span>© <span id="yr">2026</span> Hani Al Naber</span>
+  <nav><a href="/">Home</a><a href="/resume.pdf" target="_blank" rel="noopener" data-event="resume_download">Résumé PDF</a><a href="/privacy">Privacy</a><a href="https://www.linkedin.com/in/hanialnaber" target="_blank" rel="noopener">LinkedIn ↗</a><a href="https://github.com/hanialnaber" target="_blank" rel="noopener">GitHub ↗</a></nav>
+</footer>
+<script id="cw-data" type="application/json">/*__CONNECTED_WORLD_DATA__*/</script>
+<script>
+(() => {
+"use strict";
+const D = JSON.parse(document.getElementById('cw-data').textContent);
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const K = D.kpis;
+
+/* ---------- formatting ---------- */
+const nf0 = new Intl.NumberFormat('en-US', {maximumFractionDigits: 0});
+const int = n => nf0.format(Math.round(n));
+const pct = (x, d = 0) => (x >= 0 ? '+' : '−') + Math.abs(x * 100).toFixed(d) + '%';
+const pctU = (x, d = 0) => (x * 100).toFixed(d) + '%';
+const compact = n => n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : n >= 1e3 ? int(n / 1e3) + 'K' : int(n);
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const mlabel = iso => { const [y, m] = iso.split('-'); return months[+m - 1] + ' ' + y; };
+const dlabel = iso => { const [y, m, d] = iso.split('-'); return (+d) + ' ' + months[+m - 1] + ' ' + y; };
+const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const text = (parent, x, y, s, attrs = {}) => { const t = el('text', Object.assign({x, y}, attrs), parent); t.textContent = s; return t; };
+const h = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const C = { gold: css('--d-gold'), blue: css('--d-blue'), hi: css('--d-hi'), grid: css('--grid'), night: '#0A1122' };
+
+function nice(max) { const p = Math.pow(10, Math.floor(Math.log10(max))); const m = max / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+function ticks(max, n = 4) { const top = nice(max); const step = nice(top / n); const out = []; for (let v = 0; v <= top + 1e-9; v += step) out.push(+v.toFixed(6)); return out; }
+function roundTop(x, y, w, hgt, r) { r = Math.min(r, w / 2, hgt); return `M${x},${y + hgt}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hgt}Z`; }
+function roundRight(x, y, w, hgt, r) { r = Math.min(r, hgt / 2, w); return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + hgt - r}Q${x + w},${y + hgt} ${x + w - r},${y + hgt}H${x}Z`; }
+
+/* ---------- tooltip ---------- */
+function tooltip(host) {
+  const t = h('div', 'tip'); t.setAttribute('role', 'status'); host.appendChild(t);
+  return {
+    show(rows, x, y) {
+      t.replaceChildren();
+      rows.forEach((r, i) => {
+        if (i === 0) { t.appendChild(h('div', 'tv', r.value)); t.appendChild(h('div', 'tl', r.label)); return; }
+        const row = h('div', 'tr'); const k = h('i'); k.style.background = r.color || C.gold; row.appendChild(k);
+        row.appendChild(document.createTextNode(r.label)); row.appendChild(h('b', null, r.value)); t.appendChild(row);
+      });
+      const hw = host.clientWidth, tw = t.offsetWidth || 170;
+      t.style.left = Math.max(0, Math.min(hw - tw, x - tw / 2)) + 'px';
+      t.style.top = Math.max(0, y - (t.offsetHeight || 60) - 14) + 'px';
+      t.classList.add('on');
+    },
+    hide() { t.classList.remove('on'); }
+  };
+}
+
+/* ---------- table views ---------- */
+function table(host, cols, rows) {
+  const tb = document.createElement('table'); const thead = tb.createTHead().insertRow();
+  cols.forEach(c => { const th = document.createElement('th'); th.textContent = c[0]; thead.appendChild(th); });
+  const body = tb.createTBody();
+  rows.forEach(r => { const tr = body.insertRow(); cols.forEach(c => { const td = tr.insertCell(); td.textContent = c[1](r); }); });
+  host.replaceChildren(tb);
+}
+
+/* ---------- column chart ---------- */
+function columns(host, data, o) {
+  const W = host.clientWidth || 600, H = o.height || (W < 480 ? 230 : 280);
+  const m = {l: 44, r: 8, t: 26, b: 28};
+  host.replaceChildren();
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
+  const tip = tooltip(host);
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const tk = ticks(Math.max(...data.map(o.y)) * 1.08, 4); const top = tk[tk.length - 1];
+  tk.forEach(v => { const y = m.t + ph - v / top * ph; el('line', {x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: C.grid}, svg); text(svg, m.l - 8, y + 4, o.tick ? o.tick(v) : compact(v), {'text-anchor': 'end'}); });
+  const band = pw / data.length, bw = Math.max(3, Math.min(24, band * 0.64));
+  const every = Math.max(1, Math.ceil(46 / band));
+  data.forEach((d, i) => {
+    const v = o.y(d), x = m.l + i * band + (band - bw) / 2, hgt = Math.max(1, v / top * ph), y = m.t + ph - hgt;
+    const hi = o.hi && o.hi(d, i);
+    const p = el('path', {d: roundTop(x, y, bw, hgt, 4), fill: hi ? C.hi : C.gold, class: 'mk', tabindex: 0,
+      'aria-label': `${o.x(d)}: ${o.fmt(v)}`, opacity: o.partial && o.partial(d) ? 0.55 : 1}, svg);
+    const show = () => tip.show(o.tip(d), x + bw / 2, y);
+    p.addEventListener('pointerenter', show); p.addEventListener('focus', show);
+    p.addEventListener('pointerleave', () => tip.hide()); p.addEventListener('blur', () => tip.hide());
+    const lastI = data.length - 1;
+    if ((i % every === 0 && lastI - i >= Math.ceil(every * 0.75)) || i === lastI) text(svg, x + bw / 2, H - 9, o.xs ? o.xs(d) : o.x(d), {'text-anchor': 'middle'});
+    if (o.label && o.label(d, i)) text(svg, x + bw / 2, y - 7, o.label(d, i), {'text-anchor': 'middle', class: 'vl'});
+  });
+  el('line', {x1: m.l, x2: W - m.r, y1: m.t + ph, y2: m.t + ph, stroke: 'rgba(255,236,200,.18)'}, svg);
+}
+
+/* ---------- line chart ---------- */
+function line(host, data, o) {
+  const W = host.clientWidth || 600, H = o.height || (W < 480 ? 220 : 260);
+  const m = {l: 46, r: 16, t: 24, b: 28};
+  host.replaceChildren();
+  const color = o.color || C.gold;
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
+  const tip = tooltip(host);
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const vals = data.map(o.y), lo = o.min != null ? o.min : 0;
+  const tk = ticks((Math.max(...vals) - lo) * 1.1, 4).map(v => v + lo); const top = tk[tk.length - 1];
+  const X = i => m.l + (data.length === 1 ? pw / 2 : i / (data.length - 1) * pw);
+  const Y = v => m.t + ph - (v - lo) / (top - lo) * ph;
+  tk.forEach(v => { const y = Y(v); el('line', {x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: C.grid}, svg); text(svg, m.l - 8, y + 4, o.tick ? o.tick(v) : compact(v), {'text-anchor': 'end'}); });
+  const pts = data.map((d, i) => [X(i), Y(o.y(d))]);
+  const dpath = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('');
+  el('path', {d: dpath + `L${pts[pts.length - 1][0]},${m.t + ph}L${pts[0][0]},${m.t + ph}Z`, fill: color, opacity: 0.1}, svg);
+  el('path', {d: dpath, fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'}, svg);
+  const every = Math.max(1, Math.ceil(44 / (pw / Math.max(1, data.length - 1))));
+  const lastI = data.length - 1;
+  data.forEach((d, i) => { if ((i % every === 0 && lastI - i >= Math.ceil(every * 0.75)) || i === lastI) text(svg, X(i), H - 9, o.x(d), {'text-anchor': i === lastI ? 'end' : 'middle'}); });
+  el('line', {x1: m.l, x2: W - m.r, y1: m.t + ph, y2: m.t + ph, stroke: 'rgba(255,236,200,.18)'}, svg);
+  (o.marks || []).forEach(mk => {
+    const i = data.findIndex(mk.at); if (i < 0) return; const [x, y] = pts[i];
+    el('circle', {cx: x, cy: y, r: 4.5, fill: mk.hi ? C.hi : color, stroke: C.night, 'stroke-width': 2}, svg);
+    const anchor = x > W - 90 ? 'end' : x < m.l + 60 ? 'start' : 'middle';
+    text(svg, x, mk.below ? y + 20 : y - 11, mk.text(data[i]), {'text-anchor': anchor, class: mk.hi ? 'vl' : 'an'});
+  });
+  const cross = el('line', {y1: m.t, y2: m.t + ph, stroke: 'rgba(255,236,200,.35)', opacity: 0}, svg);
+  const dot = el('circle', {r: 4.5, fill: color, stroke: C.night, 'stroke-width': 2, opacity: 0}, svg);
+  const hit = el('rect', {x: m.l, y: m.t, width: pw, height: ph, fill: 'transparent', tabindex: 0, 'aria-label': o.aria + '. Use arrow keys to read values.'}, svg);
+  let cur = data.length - 1;
+  const at = i => { cur = Math.max(0, Math.min(data.length - 1, i)); const [x, y] = pts[cur]; cross.setAttribute('x1', x); cross.setAttribute('x2', x); cross.setAttribute('opacity', 1); dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('opacity', 1); tip.show(o.tip(data[cur]), x, y); };
+  const off = () => { cross.setAttribute('opacity', 0); dot.setAttribute('opacity', 0); tip.hide(); };
+  hit.addEventListener('pointermove', e => { const r = svg.getBoundingClientRect(); const x = (e.clientX - r.left) * (W / r.width); at(Math.round((x - m.l) / pw * (data.length - 1))); });
+  hit.addEventListener('pointerleave', off); hit.addEventListener('blur', off);
+  hit.addEventListener('focus', () => at(cur));
+  hit.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { at(cur - 1); e.preventDefault(); } if (e.key === 'ArrowRight') { at(cur + 1); e.preventDefault(); } });
+}
+
+/* ---------- horizontal bars (two groups) ---------- */
+function hbars(host, groups, o) {
+  const W = host.clientWidth || 600; const rowH = 26, gapH = 34, labelW = Math.min(210, W * 0.46), m = {r: 52};
+  const rows = groups.reduce((n, g) => n + g.rows.length, 0);
+  const H = rows * rowH + groups.length * gapH;
+  host.replaceChildren();
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
+  const tip = tooltip(host);
+  const max = Math.max(...groups.flatMap(g => g.rows.map(o.v)));
+  const pw = W - labelW - m.r; let y = 0;
+  groups.forEach(g => {
+    text(svg, 0, y + 20, g.title, {class: 'an', 'font-size': 11, 'letter-spacing': '0.08em'}); y += gapH - 6;
+    g.rows.forEach(r => {
+      const v = o.v(r), bw = Math.max(2, v / max * pw), by = y + (rowH - 14) / 2;
+      const nm = o.name(r); const lt = text(svg, 0, y + rowH / 2 + 4, nm, {fill: '#C9CDD8', 'font-family': 'Figtree, sans-serif', 'font-size': 13});
+      if (lt.getComputedTextLength && lt.getComputedTextLength() > labelW - 10) { let s = nm; while (s.length > 4 && lt.getComputedTextLength() > labelW - 10) { s = s.slice(0, -1); lt.textContent = s.trimEnd() + '…'; } const tt = el('title', {}, lt); tt.textContent = nm; }
+      const p = el('path', {d: roundRight(labelW, by, bw, 14, 4), fill: g.color, class: 'mk', tabindex: 0, 'aria-label': `${nm}: ${o.fmt(v)}`}, svg);
+      text(svg, labelW + bw + 7, y + rowH / 2 + 4, o.fmt(v), {class: 'vl'});
+      const show = () => tip.show(o.tip(r), labelW + bw / 2, by); p.addEventListener('pointerenter', show); p.addEventListener('focus', show);
+      p.addEventListener('pointerleave', () => tip.hide()); p.addEventListener('blur', () => tip.hide());
+      y += rowH;
+    });
+  });
+}
+
+
+/* ---------- extra helpers ---------- */
+const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
+const sgn = (x, d = 2) => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(d);
+const money = n => '$' + (n >= 1000 ? int(n / 1000) + 'K' : int(n));
+const ppl = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'bn' : n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : int(n / 1e3) + 'K';
+const byIso = rows => Object.fromEntries(rows.map(r => [r.iso3, r]));
+function niceTicks(lo, hi, n = 4) {
+  const step = nice((hi - lo) / n || 1); const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6));
+  return out;
+}
+function logTicks(lo, hi) {
+  const out = []; for (let e = Math.floor(lo); e <= Math.ceil(hi); e++) [1, 2, 5].forEach(k => { const v = Math.log10(k) + e; if (v >= lo - 1e-9 && v <= hi + 1e-9) out.push(v); });
+  return out.length > 7 ? out.filter(v => Math.abs(v - Math.round(v)) < 1e-9 || Math.abs(v - Math.round(v) - Math.log10(5)) < 1e-9) : out;
+}
+const fmtLog = v => { const x = Math.pow(10, v); return x >= 1e9 ? (x / 1e9) + 'bn' : x >= 1e6 ? (x / 1e6) + 'M' : x >= 1e3 ? (x / 1e3) + 'K' : String(Math.round(x * 100) / 100); };
+
+/* ---------- scatter ---------- */
+function scatter(host, rows, o) {
+  const W = host.clientWidth || 600, H = o.height || (W < 480 ? 300 : 380);
+  const m = {l: 46, r: 12, t: 14, b: 38};
+  host.replaceChildren();
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
+  const tip = tooltip(host);
+  const pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const pts = rows.filter(r => o.x(r) != null && o.y(r) != null && (!o.logx || o.x(r) > 0));
+  const tx = v => o.logx ? Math.log10(v) : v;
+  const xv = pts.map(r => tx(o.x(r))), yv = pts.map(o.y);
+  let x0 = Math.min(...xv), x1 = Math.max(...xv); const xp = (x1 - x0) * 0.04; x0 -= xp; x1 += xp;
+  let y0 = o.yMin != null ? o.yMin : Math.min(...yv), y1 = o.yMax != null ? o.yMax : Math.max(...yv);
+  const yp = (y1 - y0) * 0.06; if (o.yMin == null) y0 -= yp; if (o.yMax == null) y1 += yp;
+  const X = v => m.l + (tx(v) - x0) / (x1 - x0) * pw, Y = v => m.t + ph - (v - y0) / (y1 - y0) * ph;
+  niceTicks(y0, y1, 4).forEach(v => { const y = Y(v); el('line', {x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: C.grid}, svg); text(svg, m.l - 8, y + 4, o.yTick ? o.yTick(v) : compact(v), {'text-anchor': 'end'}); });
+  const xt = o.logx ? logTicks(x0, x1) : niceTicks(x0, x1, W < 480 ? 3 : 5);
+  xt.forEach(v => { const x = m.l + (v - x0) / (x1 - x0) * pw; el('line', {x1: x, x2: x, y1: m.t, y2: m.t + ph, stroke: C.grid}, svg); text(svg, x, H - 20, o.xTick ? o.xTick(o.logx ? Math.pow(10, v) : v) : (o.logx ? fmtLog(v) : compact(v)), {'text-anchor': 'middle'}); });
+  if (o.zero) {
+    if (o.zero.x && x0 < 0 && x1 > 0) { const x = m.l + (0 - x0) / (x1 - x0) * pw; el('line', {x1: x, x2: x, y1: m.t, y2: m.t + ph, stroke: 'rgba(255,236,200,.35)'}, svg); }
+    if (o.zero.y && y0 < 0 && y1 > 0) el('line', {x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), stroke: 'rgba(255,236,200,.35)'}, svg);
+  }
+  text(svg, W - m.r, H - 4, o.xLabel || '', {'text-anchor': 'end', class: 'axl'});
+  text(svg, m.l, m.t - 2, o.yLabel || '', {'text-anchor': 'start', class: 'axl'});
+  const cid = 'clip' + Math.random().toString(36).slice(2, 8);
+  const cp = el('clipPath', {id: cid}, el('defs', {}, svg)); el('rect', {x: m.l, y: m.t, width: pw, height: ph}, cp);
+  if (o.fit && o.fit.length > 1) {
+    const d = o.fit.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join('');
+    el('path', {d, fill: 'none', stroke: C.blue, 'stroke-width': 2, 'stroke-dasharray': '6 4', opacity: 0.9, 'clip-path': `url(#${cid})`}, svg);
+  }
+  const order = [...pts].sort((a, b) => (o.hi && o.hi(a) ? 1 : 0) - (o.hi && o.hi(b) ? 1 : 0));
+  order.forEach(r => {
+    const cx = X(o.x(r)), cy = Y(o.y(r)), hi = o.hi && o.hi(r);
+    el('circle', {cx, cy, r: hi ? 5.5 : 4, fill: hi ? C.hi : C.gold, 'fill-opacity': hi ? 1 : 0.62, stroke: C.night, 'stroke-width': 1.5}, svg);
+    const hit = el('circle', {cx, cy, r: 9, fill: 'transparent', class: 'mk', tabindex: hi ? 0 : -1, 'aria-label': o.tip(r).map(t => t.label + ' ' + t.value).join(', ')}, svg);
+    const show = () => tip.show(o.tip(r), cx, cy);
+    hit.addEventListener('pointerenter', show); hit.addEventListener('focus', show);
+    hit.addEventListener('pointerleave', () => tip.hide()); hit.addEventListener('blur', () => tip.hide());
+  });
+  const boxes = [];
+  const overlaps = b => boxes.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y) || b.x < m.l || b.x + b.w > W - 2 || b.y < 0 || b.y + b.h > m.t + ph;
+  pts.filter(r => o.label && o.label(r)).sort((a, b) => (o.labelRank ? o.labelRank(a) - o.labelRank(b) : 0)).forEach(r => {
+    const s = o.label(r), cx = X(o.x(r)), cy = Y(o.y(r)), w = s.length * 6.7 + 4, hgt = 15;
+    const cands = [[cx + 8, cy - 8, 'start'], [cx - 8 - w, cy - 8, 'end'], [cx - w / 2, cy - 22, 'middle'], [cx - w / 2, cy + 8, 'middle']];
+    for (const [bx, by, anchor] of cands) {
+      const b = {x: bx, y: by, w, h: hgt};
+      if (overlaps(b)) continue;
+      boxes.push(b);
+      const tx2 = anchor === 'start' ? bx : anchor === 'end' ? bx + w : bx + w / 2;
+      text(svg, tx2, by + 11.5, s, {'text-anchor': anchor, class: 'lbl'});
+      break;
+    }
+  });
+  el('line', {x1: m.l, x2: W - m.r, y1: m.t + ph, y2: m.t + ph, stroke: 'rgba(255,236,200,.18)'}, svg);
+}
+
+/* ---------- dumbbell ---------- */
+function dumbbell(host, rows, o) {
+  const W = host.clientWidth || 600, rowH = 28, top = 26, labelW = Math.min(170, W * 0.36), m = {r: 46};
+  const H = top + rows.length * rowH + 6;
+  host.replaceChildren();
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
+  const tip = tooltip(host);
+  const max = o.max || Math.max(...rows.map(r => Math.max(o.a(r), o.b(r)))) * 1.04;
+  const pw = W - labelW - m.r, X = v => labelW + v / max * pw;
+  niceTicks(0, max, W < 480 ? 3 : 5).forEach(v => { const x = X(v); el('line', {x1: x, x2: x, y1: top - 6, y2: H, stroke: C.grid}, svg); text(svg, x, 12, o.tick ? o.tick(v) : compact(v), {'text-anchor': 'middle'}); });
+  rows.forEach((r, i) => {
+    const y = top + i * rowH + rowH / 2, a = o.a(r), b = o.b(r);
+    const nm = o.name(r); const lt = text(svg, 0, y + 4, nm, {fill: '#C9CDD8', 'font-family': 'Figtree, sans-serif', 'font-size': 13});
+    if (lt.getComputedTextLength && lt.getComputedTextLength() > labelW - 10) { let s = nm; while (s.length > 4 && lt.getComputedTextLength() > labelW - 10) { s = s.slice(0, -1); lt.textContent = s.trimEnd() + '…'; } }
+    el('line', {x1: X(Math.min(a, b)), x2: X(Math.max(a, b)), y1: y, y2: y, stroke: 'rgba(255,236,200,.28)', 'stroke-width': 3, 'stroke-linecap': 'round'}, svg);
+    el('circle', {cx: X(a), cy: y, r: 5.5, fill: C.blue, stroke: C.night, 'stroke-width': 2}, svg);
+    el('circle', {cx: X(b), cy: y, r: 5.5, fill: o.hi && o.hi(r) ? C.hi : C.gold, stroke: C.night, 'stroke-width': 2}, svg);
+    text(svg, X(Math.max(a, b)) + 9, y + 4, o.fmt(b), {class: 'vl'});
+    const hit = el('rect', {x: labelW, y: y - rowH / 2, width: pw, height: rowH, fill: 'transparent', class: 'mk', tabindex: 0, 'aria-label': `${nm}: ${o.fmt(a)} to ${o.fmt(b)}`}, svg);
+    const show = () => tip.show(o.tip(r), X(b), y - 6);
+    hit.addEventListener('pointerenter', show); hit.addEventListener('focus', show); hit.addEventListener('pointerleave', () => tip.hide()); hit.addEventListener('blur', () => tip.hide());
+  });
+}
+
+/* ---------- bars with an expected marker ---------- */
+function barsExpected(host, rows, o) {
+  const W = host.clientWidth || 600, rowH = 28, labelW = Math.min(150, W * 0.32), m = {r: 120, t: 6};
+  const H = m.t + rows.length * rowH;
+  host.replaceChildren();
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
+  const tip = tooltip(host);
+  const max = Math.max(...rows.map(r => Math.max(o.v(r), o.e(r))));
+  const pw = W - labelW - (W < 480 ? 84 : m.r);
+  rows.forEach((r, i) => {
+    const y = m.t + i * rowH, v = o.v(r), e = o.e(r), bw = Math.max(2, v / max * pw), by = y + 7;
+    text(svg, 0, y + rowH / 2 + 4, o.name(r), {fill: '#C9CDD8', 'font-family': 'Figtree, sans-serif', 'font-size': 13});
+    const p = el('path', {d: roundRight(labelW, by, bw, 14, 4), fill: C.gold, class: 'mk', tabindex: 0, 'aria-label': `${o.name(r)}: ${o.fmt(v)}, expected ${o.fmt(e)}`}, svg);
+    const ex = labelW + e / max * pw;
+    el('line', {x1: ex, x2: ex, y1: by - 4, y2: by + 18, stroke: C.blue, 'stroke-width': 2.5, 'stroke-linecap': 'round'}, svg);
+    text(svg, labelW + bw + 8, y + rowH / 2 + 4, o.label(r), {class: 'vl'});
+    const show = () => tip.show(o.tip(r), labelW + bw / 2, by);
+    p.addEventListener('pointerenter', show); p.addEventListener('focus', show); p.addEventListener('pointerleave', () => tip.hide()); p.addEventListener('blur', () => tip.hide());
+  });
+}
+
+/* ---------- connections network ---------- */
+const DOMAINS = ['Wealth', 'People', 'Health', 'Wellbeing', 'Technology', 'Environment', 'Sport', 'Mobility'];
+function network(host, nodes, edges) {
+  // narrow screens keep a readable 600px canvas and scroll it sideways inside the card
+  const W0 = host.clientWidth || 640, W = Math.max(W0, 600), H = Math.round(Math.max(380, Math.min(660, W * 0.86)));
+  host.replaceChildren();
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Network of country statistics linked when they move together, beyond income'}, host);
+  const hint = host.parentElement.querySelector('.card-t span');
+  if (hint) hint.textContent = W > W0 ? 'swipe sideways · tap a statistic' : 'hover a statistic';
+  if (W > W0) { svg.style.width = W + 'px'; requestAnimationFrame(() => { host.scrollLeft = (W - W0) / 2; }); }
+  const tip = tooltip(host);
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 112;
+  const ring = nodes.filter(n => n.indicator !== 'gdp_pcap').sort((a, b) => DOMAINS.indexOf(a.domain) - DOMAINS.indexOf(b.domain));
+  const slots = ring.length + DOMAINS.length; let k = 0, prev = null; const pos = {};
+  ring.forEach(n => { if (n.domain !== prev) { k += 1; prev = n.domain; } const a = -Math.PI / 2 + (k / slots) * 2 * Math.PI; pos[n.indicator] = {x: cx + R * Math.cos(a), y: cy + R * Math.sin(a), a}; k += 1; });
+  pos.gdp_pcap = {x: cx, y: cy, a: 0};
+  const byId = Object.fromEntries(nodes.map(n => [n.indicator, n]));
+  const gE = el('g', {}, svg), gN = el('g', {}, svg);
+  const eEls = edges.map(e => {
+    const A = pos[e.a], B = pos[e.b]; if (!A || !B) return null;
+    let p;
+    if (e.income) {
+      p = el('path', {d: `M${A.x},${A.y}L${B.x},${B.y}`, stroke: 'rgba(255,236,200,.30)', 'stroke-width': 1 + Math.abs(e.rho) * 1.2, 'stroke-dasharray': '3 4', fill: 'none', class: 'eg'}, gE);
+    } else {
+      const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, qx = mx + (cx - mx) * 0.55, qy = my + (cy - my) * 0.55;
+      const w = 1.2 + Math.max(0, Math.abs(e.partial_rho) - 0.3) * 9;
+      p = el('path', {d: `M${A.x},${A.y}Q${qx},${qy} ${B.x},${B.y}`, stroke: e.partial_rho > 0 ? C.gold : C.blue, 'stroke-width': w, fill: 'none', opacity: 0.85, class: 'eg mk', tabindex: 0}, gE);
+      const show = ev => { const r = svg.getBoundingClientRect(); const sx = ev && ev.clientX ? (ev.clientX - r.left) * (W / r.width) : qx; const sy = ev && ev.clientY ? (ev.clientY - r.top) * (H / r.height) : qy;
+        tip.show([{value: `${byId[e.a].short_label} × ${byId[e.b].short_label}`, label: e.partial_rho > 0 ? 'rise together at the same income' : 'move in opposite directions at the same income'}, {label: 'Partial correlation', value: sgn(e.partial_rho), color: e.partial_rho > 0 ? C.gold : C.blue}, {label: 'Before holding income fixed', value: sgn(e.rho)}, {label: 'Countries', value: int(e.n)}], sx, sy); };
+      p.addEventListener('pointermove', show); p.addEventListener('focus', () => show()); p.addEventListener('pointerleave', () => tip.hide()); p.addEventListener('blur', () => tip.hide());
+    }
+    return {e, p};
+  }).filter(Boolean);
+  const focus = id => { eEls.forEach(({e, p}) => p.classList.toggle('dim', id && e.a !== id && e.b !== id)); gN.querySelectorAll('.nd').forEach(g => g.classList.toggle('dim', id && g.dataset.id !== id && !eEls.some(({e}) => (e.a === id && e.b === g.dataset.id) || (e.b === id && e.a === g.dataset.id)))); };
+  const labelBoxes = [];
+  [...ring, byId.gdp_pcap].forEach(n => {
+    if (!n) return; const P = pos[n.indicator], center = n.indicator === 'gdp_pcap';
+    const g = el('g', {class: 'nd', tabindex: 0, 'data-id': n.indicator, 'aria-label': `${n.label}: ${n.links_beyond_income} links beyond income`}, gN);
+    const r = center ? 13 : 4 + Math.min(6, n.links_beyond_income * 0.9);
+    el('circle', {cx: P.x, cy: P.y, r, fill: center ? C.hi : C.gold, stroke: C.night, 'stroke-width': 2}, g);
+    if (center) text(g, P.x, P.y + 30, 'Income', {'text-anchor': 'middle', class: 'lbl'});
+    else {
+      const right = Math.cos(P.a) > 0.02, left = Math.cos(P.a) < -0.02, anchor = right ? 'start' : left ? 'end' : 'middle';
+      let lx = P.x + Math.cos(P.a) * (r + 7), ly = P.y + Math.sin(P.a) * (r + 7) + 4;
+      const w = n.short_label.length * 6.6, box = () => ({x: anchor === 'start' ? lx : anchor === 'end' ? lx - w : lx - w / 2, y: ly - 11, w, h: 14});
+      const hits = b => labelBoxes.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y);
+      for (let i = 0; i < 4 && hits(box()); i++) ly += Math.sin(P.a) < 0 ? -13 : 13;   // push outwards, away from the ring
+      labelBoxes.push(box());
+      text(g, lx, ly, n.short_label, {'text-anchor': anchor});
+    }
+    const show = () => { focus(n.indicator); tip.show([{value: n.label, label: n.domain + ' · ' + n.source}, {label: 'Countries', value: int(n.countries || 0)}, ...(center ? [] : [{label: 'Correlation with income', value: n.rho_with_income != null ? sgn(n.rho_with_income) : '–'}, {label: 'Links beyond income', value: String(n.links_beyond_income), color: C.gold}])], P.x, P.y - r); };
+    g.addEventListener('pointerenter', show); g.addEventListener('focus', show);
+    g.addEventListener('pointerleave', () => { focus(null); tip.hide(); }); g.addEventListener('blur', () => { focus(null); tip.hide(); });
+  });
+}
+
+/* ================= content ================= */
+const L = D.lineage, dbt = L.dbt || {};
+const nodeById = Object.fromEntries(D.nodes.map(n => [n.indicator, n]));
+const lab = id => (nodeById[id] || {}).short_label || id;
+$('runline').replaceChildren();
+[['sources', K.sources], ['rows landed', int(L.rows_landed)], ['countries', K.countries], ['dbt models', dbt.models], ['data tests passed', `${dbt.tests}/${dbt.tests}`]].forEach(([a, b], i) => {
+  const s = h('span'); s.appendChild(document.createTextNode(a + ' ')); s.appendChild(h('b', i === 4 ? 'ok' : null, String(b))); $('runline').appendChild(s);
+});
+
+/* KPI tiles */
+const OLY = D.olympics, FOOT = D.football, PASS = D.passports, HL = D.health;
+const jam = OLY.find(r => r.iso3 === 'JAM'); const usaH = HL.find(r => r.iso3 === 'USA');
+const effects = D.eurovision_effects; const eff = (b, l) => (effects.find(r => r.shares_border === b && r.shares_language === l) || {}).avg_points;
+const neighbourAvg = (() => { const rows = effects.filter(r => r.shares_border); return rows.reduce((s, r) => s + r.avg_points * r.pairs, 0) / rows.reduce((s, r) => s + r.pairs, 0); })();
+const strangers = eff(false, false);
+const dec = D.decoupling; const decN = dec.filter(r => r.is_decoupled_territorial).length;
+const tiles = [
+  ['Strong links that are really about income', pctU(K.share_explained_by_income), `${K.strong_links_explained_by_income} of ${K.strong_links} strong correlations fade once income is held fixed`],
+  ['Eurovision points to neighbours', (neighbourAvg / strangers).toFixed(1) + '×', `${f1(neighbourAvg)} vs ${f1(strangers)} points per final for everyone else`],
+  ['Jamaica’s Olympic medals vs expected', jam ? int(jam.medals) + ' vs ' + f1(jam.expected_medals) : '–', 'Summer Games 2000 to 2020, given its size and income'],
+  ['US life expectancy vs its spending', usaH ? sgn(usaH.residual, 1) + ' yrs' : '–', usaH ? `${f1(usaH.life_expectancy)} years at ${money(usaH.health_spend_per_person)} per person` : ''],
+  ['Economies that grew while cutting CO2', String(decN), `of ${dec.length} countries of 1M+ people, 2005 to ${dec[0].latest_year}`],
+];
+tiles.forEach(([l, v, d], i) => { const t = h('div', 'tile'); t.appendChild(h('span', 'lbl', l)); t.appendChild(h('span', 'val' + (i === 0 ? ' gold' : ''), v)); t.appendChild(h('span', 'dl', d)); $('tiles').appendChild(t); });
+
+/* 01 connections */
+const beyond = D.edges.filter(e => e.beyond), incomeE = D.edges.filter(e => e.income);
+$('t-conn').textContent = `I tested every pair of ${K.indicators} country statistics, ${int(K.pairs_tested)} in all, across up to ${K.countries} countries. Rich countries score higher on almost everything, so each link is tested twice: as it looks, and with income held fixed. ${K.links_beyond_income} links survive; they are the lines on the map.`;
+$('k-share').textContent = pctU(K.share_explained_by_income);
+$('t-share').textContent = `of the strong correlations between country statistics (${K.strong_links} pairs with |ρ| ≥ 0.5) fade below 0.2 once income is held fixed. Life expectancy and internet use, for example, both track income closely; compare countries with the same income and the link mostly disappears.`;
+[['Rise together (beyond income)', C.gold, false], ['Move in opposite directions', C.blue, false], ['Tracks income (|ρ| ≥ 0.5)', 'rgba(255,236,200,.45)', true]].forEach(([t, c, dash]) => {
+  const s = h('span'); const i = h('i'); i.style.background = dash ? 'transparent' : c; if (dash) i.style.borderTop = '2px dashed ' + c; i.style.height = dash ? '0' : '3px'; i.style.verticalAlign = '3px'; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-net').appendChild(s);
+});
+const DEV = new Set(['People', 'Health', 'Technology']);
+const cross = beyond.filter(e => nodeById[e.a] && nodeById[e.b] && nodeById[e.a].domain !== nodeById[e.b].domain && !(DEV.has(nodeById[e.a].domain) && DEV.has(nodeById[e.b].domain))).sort((a, b) => Math.abs(b.partial_rho) - Math.abs(a.partial_rho)).slice(0, 8);
+cross.forEach(e => { const li = h('li'); li.appendChild(h('b', null, `${lab(e.a)} and ${lab(e.b)}`)); li.appendChild(document.createTextNode(e.partial_rho > 0 ? ' rise together' : ' move in opposite directions')); li.appendChild(h('span', null, `partial ρ ${sgn(e.partial_rho)} · before ${sgn(e.rho)} · ${e.n} countries`)); $('links').appendChild(li); });
+table($('tb-net'), [['Statistic A', e => lab(e.a)], ['Statistic B', e => lab(e.b)], ['ρ', e => sgn(e.rho)], ['Partial ρ', e => e.partial_rho != null ? sgn(e.partial_rho) : '–'], ['Countries', e => e.n]], [...beyond].sort((a, b) => Math.abs(b.partial_rho) - Math.abs(a.partial_rho)));
+const drawNet = () => network($('c-net'), D.nodes, [...incomeE, ...beyond]);
+
+/* fit helpers */
+const fitLine = (rows, x, fx, steps = 40) => { const xs = rows.map(x).filter(v => v > 0); const lo = Math.log10(Math.min(...xs)), hi = Math.log10(Math.max(...xs)); return Array.from({length: steps + 1}, (_, i) => { const v = Math.pow(10, lo + (hi - lo) * i / steps); return [v, fx(v)]; }); };
+const olsLog = (rows, x, y) => { const pts = rows.filter(r => x(r) > 0 && y(r) != null).map(r => [Math.log(x(r)), y(r)]); const n = pts.length, mx = pts.reduce((s, p) => s + p[0], 0) / n, my = pts.reduce((s, p) => s + p[1], 0) / n; const b = pts.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0) / pts.reduce((s, p) => s + (p[0] - mx) ** 2, 0); return v => my + b * (Math.log(v) - mx); };
+
+/* 1 happiness */
+const HP = D.happiness; const hpTop = [...HP].sort((a, b) => b.residual - a.residual);
+const hpR2 = HP[0].r_squared; const hfit = olsLog(HP, r => r.gdp_pcap, r => r.happiness / 10);
+const perDoubling = (hfit(2000) - hfit(1000));
+const hpLabel = new Set(hpTop.filter(r => r.population >= 5e6).slice(0, 5).map(r => r.iso3));
+$('h-happy').textContent = 'Money buys happiness, at a falling rate.';
+$('t-happy').textContent = `Income alone explains ${pctU(hpR2)} of the gap in life evaluations across ${HP.length} countries. Each doubling of income adds about ${perDoubling.toFixed(2)} points on the 0 to 10 scale, so the first thousand dollars count far more than the last. ${hpTop.filter(r => hpLabel.has(r.iso3)).slice(0, 4).map(r => r.country_name).join(', ')} report more happiness than their income predicts.`;
+const drawHappy = () => scatter($('c-happy'), HP, {x: r => r.gdp_pcap, y: r => r.happiness / 10, logx: true, xTick: v => money(v), yTick: v => v.toFixed(0), xLabel: 'GDP per person, PPP $ (log)', yLabel: 'life evaluation, 0 to 10', aria: 'Scatter of life evaluation against GDP per person',
+  fit: fitLine(HP, r => r.gdp_pcap, hfit), hi: r => hpLabel.has(r.iso3), label: r => hpLabel.has(r.iso3) ? r.country_name : null,
+  tip: r => [{value: r.country_name, label: (r.happiness / 10).toFixed(1) + ' / 10'}, {label: 'Expected for income', value: (r.expected_happiness / 10).toFixed(1)}, {label: 'GDP per person', value: money(r.gdp_pcap)}]});
+table($('tb-happy'), [['Country', r => r.country_name], ['Life evaluation', r => (r.happiness / 10).toFixed(1)], ['Expected', r => (r.expected_happiness / 10).toFixed(1)], ['GDP per person', r => money(r.gdp_pcap)]], hpTop);
+
+/* 2 olympics */
+const olyTop = OLY.filter(r => r.medals >= 10).slice(0, 10);
+const cuba = OLY.find(r => r.iso3 === 'CUB'), kenya = OLY.find(r => r.iso3 === 'KEN');
+$('h-oly').textContent = 'Some small nations win ten or twenty times the medals their size and wealth predict.';
+$('t-oly').textContent = `From Sydney 2000 to Tokyo 2020, Jamaica won ${jam.medals} Summer Olympic medals; a model of population and income across ${OLY[0].n_countries} countries expects about ${Math.max(1, Math.round(jam.expected_medals))}. Cuba (${cuba.medals} vs ${Math.round(cuba.expected_medals)}) and Kenya (${kenya.medals} vs ${Math.round(kenya.expected_medals)}) beat the model by an order of magnitude too: sprinting, boxing and distance running are focused national strengths. A relay gold counts once.`;
+[['Medals won', C.gold], ['Expected from population and income', C.blue]].forEach(([t, c]) => { const s = h('span'); const i = h('i'); i.style.background = c; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-oly').appendChild(s); });
+const drawOly = () => barsExpected($('c-oly'), olyTop, {name: r => r.country_name, v: r => r.medals, e: r => r.expected_medals, fmt: v => f1(v), label: r => `${r.medals} · ${f1(r.expected_medals)} exp.`, aria: 'Olympic medals won versus expected, top overperformers',
+  tip: r => [{value: `${r.medals} medals`, label: r.country_name + ' · 2000 to 2020'}, {label: 'Expected', value: f1(r.expected_medals), color: C.blue}, {label: 'Gold', value: String(r.gold)}, {label: 'Per million people', value: f1(r.medals_per_million)}]});
+table($('tb-oly'), [['Country', r => r.country_name], ['Medals', r => r.medals], ['Gold', r => r.gold], ['Expected', r => f1(r.expected_medals)], ['Per million', r => f1(r.medals_per_million)]], OLY.filter(r => r.medals > 0));
+
+/* 3 football */
+const FT = FOOT.filter(r => r.iso3 && r.population); const ftTop = [...FT].sort((a, b) => b.rating_above_expected - a.rating_above_expected);
+const uru = FOOT.find(r => r.iso3 === 'URY'), por = FOOT.find(r => r.iso3 === 'PRT'), lead = FOOT[0];
+const ftLabel = new Set([...ftTop.filter(r => r.population < 15e6).slice(0, 5).map(r => r.iso3), lead.iso3, 'CHN', 'IND', 'USA'].filter(Boolean));
+$('h-foot').textContent = `Football’s giant-killers: Uruguay is rated ${uru.world_rank}th with ${ppl(uru.population)} people.`;
+const ftSmall = ftTop.filter(r => r.population < 15e6).slice(0, 5);
+$('t-foot').textContent = `I rebuilt Elo ratings from ${int(K.football_matches_rated)} matches between FIFA-recognised teams since 1872. ${lead.team} leads today. Among countries under 15 million people, ${ftSmall.map(r => r.team).join(', ')} beat what their size and income predict by the widest margins; Portugal, with ${ppl(por.population)} people, is rated ${por.world_rank}th in the world. England, Scotland, Wales and Northern Ireland are rated but not modelled, as they are not separate countries in the population data.`;
+const drawFoot = () => scatter($('c-foot'), FT, {x: r => r.population, y: r => r.rating, logx: true, xTick: v => ppl(v), yTick: v => int(v), xLabel: 'population (log)', yLabel: 'Elo rating', aria: 'Scatter of football Elo rating against population',
+  hi: r => ftTop.filter(t => t.population < 15e6).slice(0, 5).some(t => t.iso3 === r.iso3), label: r => ftLabel.has(r.iso3) ? r.team : null,
+  tip: r => [{value: r.team, label: `Elo ${int(r.rating)} · world #${r.world_rank}`}, {label: 'Expected for size and income', value: int(r.expected_rating)}, {label: 'Population', value: ppl(r.population)}, {label: 'Change since 2000', value: r.change_since_2000 != null ? sgn(r.change_since_2000, 0) : '–'}]});
+table($('tb-foot'), [['Team', r => r.team], ['Rank', r => r.world_rank], ['Elo', r => int(r.rating)], ['Expected', r => r.expected_rating ? int(r.expected_rating) : '–'], ['Since 2000', r => r.change_since_2000 != null ? sgn(r.change_since_2000, 0) : '–']], FOOT);
+
+/* 4 passports */
+const pTop = PASS[0]; const pOver = [...PASS].filter(r => r.power_above_expected != null && r.population >= 5e6 && r.passport_power >= 100).sort((a, b) => b.power_above_expected - a.power_above_expected).slice(0, 4);
+const pLabel = new Set([...PASS.slice(0, 3).map(r => r.iso3), ...pOver.map(r => r.iso3)]);
+const pfit = olsLog(PASS.filter(r => r.gdp_pcap && r.population >= 1e6), r => r.gdp_pcap, r => r.passport_power);
+$('h-pass').textContent = 'Passport power follows income, with notable exceptions.';
+$('t-pass').textContent = `The strongest passport opens ${pTop.passport_power} destinations without a visa arranged in advance. Income explains most of the spread, but ${pOver.map(r => `${r.country_name} (${r.passport_power})`).join(', ')} open far more doors than their income predicts, usually thanks to regional agreements.`;
+const drawPass = () => scatter($('c-pass'), PASS.filter(r => r.gdp_pcap), {x: r => r.gdp_pcap, y: r => r.passport_power, logx: true, xTick: v => money(v), yTick: v => int(v), yMin: 0, xLabel: 'GDP per person, PPP $ (log)', yLabel: 'destinations', aria: 'Scatter of passport power against GDP per person',
+  fit: fitLine(PASS.filter(r => r.gdp_pcap), r => r.gdp_pcap, pfit), hi: r => pLabel.has(r.iso3), label: r => pLabel.has(r.iso3) ? r.country_name : null,
+  tip: r => [{value: r.country_name, label: `${r.passport_power} destinations · rank ${r.power_rank}`}, {label: 'Expected for income', value: r.expected_power != null ? int(r.expected_power) : '–'}, {label: 'Passports it admits visa-free', value: String(r.passport_openness)}]});
+table($('tb-pass'), [['Passport', r => r.country_name], ['Destinations', r => r.passport_power], ['Rank', r => r.power_rank], ['Expected', r => r.expected_power != null ? int(r.expected_power) : '–'], ['Admits', r => r.passport_openness]], PASS);
+
+/* 5 big mac */
+const BM = D.bigmac; const bmTop = BM.slice(0, 7), bmBot = BM.slice(-7).reverse();
+$('c-mac-sub').textContent = `${BM.length} countries · ${dlabel(BM[0].price_date)}`;
+$('h-mac').textContent = `A day’s income buys ${int(BM[0].big_macs_per_day_of_income)} Big Macs in ${BM[0].country_name}, and ${f1(BM[BM.length - 1].big_macs_per_day_of_income)} in ${BM[BM.length - 1].country_name}.`;
+$('t-mac').textContent = `The Big Mac index compares the same burger everywhere. Dividing a day of GDP per person by the local price in dollars shows what income actually buys: prices are not set by income alone, so cheap burgers in rich places (${bmTop.slice(0, 3).map(r => r.country_name).join(', ')}) and pricey ones in poorer places sit at the ends.`;
+const drawMac = () => hbars($('c-mac'), [{title: 'MOST BIG MACS PER DAY OF INCOME', rows: bmTop, color: C.gold}, {title: 'FEWEST', rows: bmBot, color: C.blue}], {v: r => r.big_macs_per_day_of_income, name: r => r.country_name, fmt: v => f1(v), aria: 'Big Macs bought by a day of GDP per person',
+  tip: r => [{value: f1(r.big_macs_per_day_of_income) + ' Big Macs', label: r.country_name}, {label: 'Price', value: '$' + r.dollar_price.toFixed(2)}, {label: 'GDP per person', value: money(r.gdp_per_person_usd)}]});
+table($('tb-mac'), [['Country', r => r.country_name], ['Big Macs per day', r => f1(r.big_macs_per_day_of_income)], ['Price ($)', r => r.dollar_price.toFixed(2)], ['GDP per person ($)', r => int(r.gdp_per_person_usd)]], BM);
+
+/* 6 nobel */
+const NB = D.nobel; const us = NB.find(r => r.iso3 === 'USA');
+const nbRows = [...NB].sort((a, b) => Math.max(b.born_here, b.won_here) - Math.max(a.born_here, a.won_here)).slice(0, 10);
+$('h-nobel').textContent = `The US has hosted ${us.won_here} science Nobel winners but produced ${us.born_here}.`;
+$('t-nobel').textContent = `Among Physics, Chemistry and Medicine laureates from 1901 to 2016, ${us.net_gain} more were working in the US when they won than were born there. ${NB.filter(r => r.net_gain < 0).length} of the ${NB.length} countries with five or more laureates are net exporters of talent; the biggest flows run from the UK, Canada and Germany to American labs.`;
+D.nobel_flows.slice(0, 6).forEach(f => { const li = h('li'); const b = h('b', null, `${f.birth_country} → ${f.organization_country}`); li.appendChild(b); li.appendChild(h('span', null, `${f.laureates} laureates`)); $('nobel-flows').appendChild(li); });
+[['Born there', C.blue], ['Working there when they won', C.gold]].forEach(([t, c]) => { const s = h('span'); const i = h('i'); i.style.background = c; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-nobel').appendChild(s); });
+const drawNobel = () => dumbbell($('c-nobel'), nbRows, {name: r => r.country_name, a: r => r.born_here, b: r => r.won_here, fmt: v => int(v), aria: 'Science Nobel laureates born in each country versus working there when they won',
+  tip: r => [{value: r.country_name, label: `net ${sgn(r.net_gain, 0)}`}, {label: 'Born there', value: String(r.born_here), color: C.blue}, {label: 'Won while working there', value: String(r.won_here), color: C.gold}, {label: 'Both', value: String(r.born_and_won_here)}]});
+table($('tb-nobel'), [['Country', r => r.country_name], ['Born', r => r.born_here], ['Won there', r => r.won_here], ['Net', r => sgn(r.net_gain, 0)]], NB);
+
+/* 7 eurovision */
+const EP = D.eurovision_pairs;
+$('h-euro').textContent = `At Eurovision, neighbours give each other ${(neighbourAvg / strangers).toFixed(1)} times the points.`;
+$('t-euro').textContent = `In finals from 1975 to 2022, countries sharing a land border gave each other ${f1(neighbourAvg)} points on average, against ${f1(strangers)} for everyone else. The few pairs that share a language but no border (${(effects.find(r => !r.shares_border && r.shares_language) || {}).pairs}) average ${f1(eff(false, true))}. Culture, diaspora and similar taste travel together. The most reliable swaps:`;
+EP.slice(0, 6).forEach(p => { const li = h('li'); li.appendChild(h('b', null, `${p.country_a} ⇄ ${p.country_b}`)); li.appendChild(h('span', null, `${f1(p.a_to_b)} / ${f1(p.b_to_a)} pts · ${p.finals} finals`)); $('euro-pairs').appendChild(li); });
+const euroRows = [{name: 'Border and language', v: eff(true, true), n: (effects.find(r => r.shares_border && r.shares_language) || {}).pairs}, {name: 'Shared border', v: eff(true, false), n: (effects.find(r => r.shares_border && !r.shares_language) || {}).pairs}, {name: 'Shared language', v: eff(false, true), n: (effects.find(r => !r.shares_border && r.shares_language) || {}).pairs}, {name: 'Neither', v: strangers, n: (effects.find(r => !r.shares_border && !r.shares_language) || {}).pairs}];
+const drawEuro = () => hbars($('c-euro'), [{title: 'POINTS PER FINAL, BY RELATIONSHIP', rows: euroRows, color: C.gold}], {v: r => r.v, name: r => r.name, fmt: v => f1(v), aria: 'Average Eurovision points by relationship between countries', tip: r => [{value: f1(r.v) + ' points', label: r.name}, {label: 'Country pairs', value: int(r.n)}]});
+table($('tb-euro'), [['Pair', p => `${p.country_a} ⇄ ${p.country_b}`], ['A → B', p => f1(p.a_to_b)], ['B → A', p => f1(p.b_to_a)], ['Finals', p => p.finals], ['Border', p => p.shares_border ? 'yes' : 'no']], EP);
+
+/* 8 decoupling */
+const decBoth = dec.filter(r => r.is_decoupled_both).length; const uk = dec.find(r => r.iso3 === 'GBR');
+const decLabel = new Set(dec.filter(r => r.is_decoupled_both).sort((a, b) => a.co2_change - b.co2_change).slice(0, 5).map(r => r.iso3).concat(['CHN', 'IND', 'USA']));
+const decShown = dec.filter(r => r.gdp_change <= 2.5 && r.co2_change <= 2.5);
+$('dec-yr').textContent = dec[0].latest_year;
+$('dec-sub').textContent = `${decShown.length} countries of 1M+ · ${dec.length - decShown.length} beyond +250% not shown`;
+$('h-dec').textContent = `${decN} countries grew their economies while cutting emissions.`;
+$('t-dec').textContent = `Between 2005 and ${dec[0].latest_year}, ${decN} of ${dec.length} countries with 1M+ people grew GDP and cut the CO2 they emit at home. ${decBoth} also cut consumption-based emissions, which count the CO2 in what they import. The UK grew ${pctU(uk.gdp_change)} while its territorial emissions fell ${pctU(-uk.co2_change)}. Everyone in the lower-right box decoupled.`;
+const drawDec = () => scatter($('c-dec'), decShown, {x: r => r.gdp_change * 100, y: r => r.co2_change * 100, xTick: v => (v > 0 ? '+' : '') + int(v) + '%', yTick: v => (v > 0 ? '+' : '') + int(v) + '%', zero: {x: true, y: true}, xLabel: 'change in GDP (PPP)', yLabel: 'change in CO2 (territorial)', aria: 'Scatter of GDP change against CO2 change since 2005',
+  hi: r => r.is_decoupled_both, label: r => decLabel.has(r.iso3) ? r.country_name : null,
+  tip: r => [{value: r.country_name, label: r.is_decoupled_both ? 'decoupled, including imports' : r.is_decoupled_territorial ? 'decoupled at home' : 'not decoupled'}, {label: 'GDP', value: pct(r.gdp_change)}, {label: 'CO2 at home', value: pct(r.co2_change)}, {label: 'CO2 incl. imports', value: r.consumption_co2_change != null ? pct(r.consumption_co2_change) : '–'}]});
+table($('tb-dec'), [['Country', r => r.country_name], ['GDP', r => pct(r.gdp_change)], ['CO2 at home', r => pct(r.co2_change)], ['CO2 incl. imports', r => r.consumption_co2_change != null ? pct(r.consumption_co2_change) : '–']], dec.filter(r => r.is_decoupled_territorial));
+
+/* 9 energy */
+const EN = D.energy; const world = EN.find(r => r.iso3 === 'WLD'); const enTop = EN.filter(r => r.iso3 !== 'WLD').slice(0, 10);
+$('h-energy').textContent = `Solar and wind went from ${f1(world.solar_wind_2015)}% to ${f1(world.solar_wind_latest)}% of the world’s electricity in ten years.`;
+$('t-energy').textContent = `The fastest movers changed their grids within a decade: ${enTop.slice(0, 3).map(r => `${r.country_name} from ${int(r.solar_wind_2015)}% to ${int(r.solar_wind_latest)}%`).join('; ')}. Among countries generating at least 5 TWh a year, ${EN.filter(r => r.iso3 !== 'WLD' && r.solar_wind_latest >= 30).length} now get 30% or more of their power from the sun and wind.`;
+[['2015', C.blue], [String(world.latest_year), C.gold]].forEach(([t, c]) => { const s = h('span'); const i = h('i'); i.style.background = c; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-energy').appendChild(s); });
+const drawEnergy = () => dumbbell($('c-energy'), [world, ...enTop], {name: r => r.country_name, a: r => r.solar_wind_2015, b: r => r.solar_wind_latest, fmt: v => int(v) + '%', tick: v => int(v) + '%', hi: r => r.iso3 === 'WLD', aria: 'Solar and wind share of electricity, 2015 and latest',
+  tip: r => [{value: f1(r.solar_wind_latest) + '%', label: `${r.country_name} · ${r.latest_year}`}, {label: '2015', value: f1(r.solar_wind_2015) + '%', color: C.blue}, {label: 'Solar', value: f1(r.solar_latest) + '%'}, {label: 'Wind', value: f1(r.wind_latest) + '%'}]});
+table($('tb-energy'), [['Country', r => r.country_name], ['2015', r => f1(r.solar_wind_2015) + '%'], ['Latest', r => f1(r.solar_wind_latest) + '%'], ['Year', r => r.latest_year]], EN);
+
+/* 10 health */
+const hfit2 = olsLog(HL, r => r.health_spend_per_person, r => r.life_expectancy);
+const hBest = [...HL].filter(r => r.health_spend_per_person >= 1500).sort((a, b) => b.residual - a.residual).slice(0, 4);
+const hLabel = new Set(['USA', ...hBest.map(r => r.iso3), 'CHE', 'NOR']);
+$('h-health').textContent = `The US spends the most on health, yet lives ${f1(-usaH.residual)} years less than that spending buys elsewhere.`;
+$('t-health').textContent = `At $${int(usaH.health_spend_per_person)} per person (PPP), US health spending is the highest in the data, while life expectancy is ${f1(usaH.life_expectancy)} years: ${f1(-usaH.residual)} below what the pattern across ${HL.length} countries predicts for that spending. ${hBest.map(r => r.country_name).join(', ')} get the most years for their money among higher spenders.`;
+const drawHealth = () => scatter($('c-health'), HL, {x: r => r.health_spend_per_person, y: r => r.life_expectancy, logx: true, xTick: v => money(v), yTick: v => int(v), xLabel: 'health spending per person, PPP $ (log)', yLabel: 'life expectancy, years', aria: 'Scatter of life expectancy against health spending per person',
+  fit: fitLine(HL, r => r.health_spend_per_person, hfit2), hi: r => hLabel.has(r.iso3), label: r => hLabel.has(r.iso3) ? r.country_name : null,
+  tip: r => [{value: r.country_name, label: f1(r.life_expectancy) + ' years'}, {label: 'Expected for spending', value: f1(r.expected_life_expectancy)}, {label: 'Spending per person', value: money(r.health_spend_per_person)}]});
+table($('tb-health'), [['Country', r => r.country_name], ['Life expectancy', r => f1(r.life_expectancy)], ['Expected', r => f1(r.expected_life_expectancy)], ['Spending ($)', r => int(r.health_spend_per_person)]], [...HL].sort((a, b) => b.residual - a.residual));
+
+/* build */
+const flow = [
+  ['01', 'Ingest', 'Python', [`${K.sources} sources over HTTPS`, 'Retries with backoff', 'SHA-256 per file, run manifest']],
+  ['02', 'Land', 'Parquet (bronze)', ['Typed, as delivered', 'Lineage on every row', `${int(L.rows_landed)} rows`]],
+  ['03', 'Conform', 'Country crosswalk', ['605 names and codes → ISO', 'Historic birthplaces mapped', 'Coverage tests']],
+  ['04', 'Model', 'dbt + DuckDB', [`${dbt.models} models, ${3} in Python`, 'Elo from 1872 results', 'Correlations and regressions']],
+  ['05', 'Test', 'dbt tests', [`${dbt.tests} data tests`, 'Elo must be zero-sum', 'Ranges, keys, coverage']],
+  ['06', 'Publish', 'JSON → this page', ['Static, no live queries', 'Airflow DAG', 'Monthly GitHub Actions refresh']],
+];
+flow.forEach(([n, t, tool, items]) => { const s = h('div', 'step'); s.appendChild(h('div', 'sn', n)); s.appendChild(h('h4', null, t)); s.appendChild(h('div', 'tool', tool)); const ul = h('ul'); items.forEach(i => ul.appendChild(h('li', null, i))); s.appendChild(ul); $('flow').appendChild(s); });
+[[int(L.rows_landed), 'rows landed from 11 sources'], [String(dbt.tests), 'data tests, all passing'], [int(K.pairs_tested), 'statistical pairs tested'], [L.runtime_s ? L.runtime_s.toFixed(0) + 's' : '< 1 min', 'full pipeline run, end to end']].forEach(([b, s]) => { const d = h('div'); d.appendChild(h('b', null, b)); d.appendChild(h('span', null, s)); $('stats').appendChild(d); });
+table($('tb-cov'), [['Source', r => r.source], ['Rows', r => int(r.rows)], ['Countries', r => r.countries], ['Years', r => r.first_year ? `${r.first_year}–${r.last_year}` : '–'], ['Mapped', r => pctU(r.mapped_share, r.mapped_share < 1 ? 1 : 0)]], D.coverage);
+
+/* sources */
+L.sources.forEach(s => { const li = h('li'); li.appendChild(h('b', null, s.name)); li.appendChild(h('div', null, s.citation)); const a = h('a', null, s.url.replace(/^https:\/\/raw\.githubusercontent\.com\//, 'github.com/').replace(/\/(master|main)$/, '')); a.href = s.url.replace('raw.githubusercontent.com', 'github.com').replace(/\/(master|main)(\/.*)?$/, ''); a.target = '_blank'; a.rel = 'noopener'; li.appendChild(a); li.appendChild(h('div', 'lic', s.license)); $('srclist').appendChild(li); });
+$('yr').textContent = new Date().getFullYear();
+
+/* draw + redraw on resize */
+const draws = [drawNet, drawHappy, drawOly, drawFoot, drawPass, drawMac, drawNobel, drawEuro, drawDec, drawEnergy, drawHealth];
+const all = () => draws.forEach(f => { try { f(); } catch (e) { console.error(e); } });
+all();
+let rw = window.innerWidth, rt;
+window.addEventListener('resize', () => { if (window.innerWidth === rw) return; rw = window.innerWidth; clearTimeout(rt); rt = setTimeout(all, 120); });
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), {rootMargin: '0px 0px -8% 0px'}) : null;
+document.querySelectorAll('.rv').forEach(n => io ? io.observe(n) : n.classList.add('in'));
+})();
+</script>
+</body>
+</html>
