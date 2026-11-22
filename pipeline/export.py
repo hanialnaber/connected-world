@@ -91,6 +91,14 @@ def build_payload(con: duckdb.DuckDBPyConnection, runtime_s: float | None = None
     }
 
 
+def previous_runtime() -> float | None:
+    """Runtime recorded by the last full run, if an export exists."""
+    try:
+        return json.loads((EXPORTS / "connected_world.json").read_text(encoding="utf-8"))["lineage"].get("runtime_s")
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def run(runtime_s: float | None = None) -> dict:
     EXPORTS.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(str(WAREHOUSE), read_only=True)

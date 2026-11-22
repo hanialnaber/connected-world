@@ -7,7 +7,7 @@ together once you account for money?**
 
 **Live page: [hani-alnaber.com/connected](https://hani-alnaber.com/connected)**
 
-## What the data says (latest run)
+## What the data says (run of 22 Nov 2026)
 
 | | |
 |---|---|
@@ -15,12 +15,13 @@ together once you account for money?**
 | Links that survive | **47** of 351 pairs tested, after false-discovery control |
 | Eurovision | Neighbours give each other **1.9×** the points (5.2 vs 2.7 per final, 1975 to 2022) |
 | Olympics | Jamaica won **57** Summer medals (2000 to 2020) where size and income predict about 1; Cuba 125 vs 6 |
-| Football | Elo rebuilt from **45,906** matches; Uruguay (3.4M people) is rated 17th in the world |
+| Football | Elo rebuilt from **46,057** matches (through 17 Nov 2026); Uruguay (3.4M people) is rated 16th in the world |
 | Health | US life expectancy is **6.0 years** below what its health spending predicts across 156 countries |
-| Emissions | **43** of 149 countries (1M+ people) grew GDP while cutting CO2, 2005 to 2022 |
+| Emissions | **42** of 149 countries (1M+ people) grew GDP while cutting CO2, 2005 to 2022 |
 | Energy | Solar and wind rose from **4.5% to 17.3%** of the world's electricity, 2015 to 2025 |
 | Nobel | 277 science laureates worked in the US when they won; 188 were born there |
-| Big Mac | A day of GDP per person buys 111 Big Macs at the top of the index and 1.9 at the bottom |
+| Big Mac | A day of GDP per person buys 111 Big Macs in Taiwan and 1.9 in Pakistan (July 2026 prices) |
+| Passports | The UAE passport opens **169** destinations without a visa arranged in advance, the most of any country |
 
 ## Architecture
 
@@ -34,7 +35,7 @@ flowchart LR
         P[Passports · Big Mac · borders]
     end
     G & O & S & C & P --> X[Ingest · Python<br/>retries, SHA-256, manifest]
-    X --> B[(Bronze Parquet<br/>977K rows + lineage)]
+    X --> B[(Bronze Parquet<br/>983K rows + lineage)]
     B --> ST[dbt staging · 13 views]
     K[Crosswalk seed<br/>605 names → ISO] --> ST
     ST --> I[intermediate<br/>Elo in Python]

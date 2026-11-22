@@ -36,8 +36,11 @@ def main(argv: list[str] | None = None) -> int:
         extract.run(refresh=args.refresh)
     if args.step in ("transform", "all"):
         transform()
-    if args.step in ("export", "all"):
+    if args.step == "all":
         export.run(runtime_s=time.perf_counter() - started)
+    elif args.step == "export":
+        # a re-render alone says nothing about pipeline speed: keep the last full run's time
+        export.run(runtime_s=export.previous_runtime())
     logging.getLogger("connected_world").info("done in %.1fs", time.perf_counter() - started)
     return 0
 

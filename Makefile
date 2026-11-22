@@ -1,4 +1,4 @@
-.PHONY: setup extract build export all refresh crosswalk clean
+.PHONY: setup extract build export all refresh og crosswalk clean
 
 setup:      ## install dependencies
 	pip install -r requirements.txt
@@ -17,6 +17,9 @@ all:        ## the whole pipeline
 
 refresh:    ## re-download every source, then run everything
 	python -m pipeline all --refresh
+
+og:         ## exports/connected-og.png, the 1200x630 link preview (needs Pillow)
+	python scripts/make_og_image.py
 
 crosswalk:  ## regenerate dbt/seeds/country_aliases.csv after a source adds new names
 	python scripts/build_crosswalk.py

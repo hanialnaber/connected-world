@@ -10,7 +10,11 @@
 <meta property="og:title" content="Connected World · Hani Al Naber">
 <meta property="og:description" content="11 open datasets, 170 countries, 351 tested connections. Which ones survive once you account for money, and how the pipeline was built.">
 <meta property="og:url" content="https://hani-alnaber.com/connected">
-<meta property="og:image" content="https://hani-alnaber.com/opengraph-image">
+<meta property="og:image" content="https://hani-alnaber.com/connected-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Connected World: a network of 27 country statistics linked when they move together beyond income">
+<meta name="twitter:image" content="https://hani-alnaber.com/connected-og.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#04060B">
 <link rel="icon" href="/favicon.ico">
@@ -555,6 +559,8 @@ function hbars(host, groups, o) {
 
 /* ---------- extra helpers ---------- */
 const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
+const andJoin = xs => xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1];
+const ord = n => { const v = n % 100; return n + (v >= 11 && v <= 13 ? 'th' : ({1: 'st', 2: 'nd', 3: 'rd'}[n % 10] || 'th')); };
 const sgn = (x, d = 2) => (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(d);
 const money = n => '$' + (n >= 1000 ? int(n / 1000) + 'K' : int(n));
 const ppl = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'bn' : n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : int(n / 1e3) + 'K';
@@ -674,15 +680,16 @@ function barsExpected(host, rows, o) {
 /* ---------- connections network ---------- */
 const DOMAINS = ['Wealth', 'People', 'Health', 'Wellbeing', 'Technology', 'Environment', 'Sport', 'Mobility'];
 function network(host, nodes, edges) {
-  // narrow screens keep a readable 600px canvas and scroll it sideways inside the card
-  const W0 = host.clientWidth || 640, W = Math.max(W0, 600), H = Math.round(Math.max(380, Math.min(660, W * 0.86)));
+  // narrow screens draw a 600-unit canvas scaled to fit the card, with larger type so labels stay readable
+  const W0 = host.clientWidth || 640, narrow = W0 < 600, W = narrow ? 600 : W0, H = narrow ? 560 : Math.round(Math.max(380, Math.min(660, W * 0.86)));
+  const scale = narrow ? W0 / W : 1, fs = narrow ? 16 : 12, margin = narrow ? 146 : 112;
   host.replaceChildren();
-  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': 'Network of country statistics linked when they move together, beyond income'}, host);
+  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: Math.round(H * scale), role: 'img', 'aria-label': 'Network of country statistics linked when they move together, beyond income'}, host);
   const hint = host.parentElement.querySelector('.card-t span');
-  if (hint) hint.textContent = W > W0 ? 'swipe sideways · tap a statistic' : 'hover a statistic';
-  if (W > W0) { svg.style.width = W + 'px'; requestAnimationFrame(() => { host.scrollLeft = (W - W0) / 2; }); }
-  const tip = tooltip(host);
-  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 112;
+  if (hint) hint.textContent = narrow ? 'tap a statistic' : 'hover a statistic';
+  if (narrow) svg.style.fontSize = fs + 'px';
+  const tip0 = tooltip(host), tip = {show: (rows, x, y) => tip0.show(rows, x * scale, y * scale), hide: () => tip0.hide()};
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - margin;
   const ring = nodes.filter(n => n.indicator !== 'gdp_pcap').sort((a, b) => DOMAINS.indexOf(a.domain) - DOMAINS.indexOf(b.domain));
   const slots = ring.length + DOMAINS.length; let k = 0, prev = null; const pos = {};
   ring.forEach(n => { if (n.domain !== prev) { k += 1; prev = n.domain; } const a = -Math.PI / 2 + (k / slots) * 2 * Math.PI; pos[n.indicator] = {x: cx + R * Math.cos(a), y: cy + R * Math.sin(a), a}; k += 1; });
@@ -711,15 +718,15 @@ function network(host, nodes, edges) {
     const g = el('g', {class: 'nd', tabindex: 0, 'data-id': n.indicator, 'aria-label': `${n.label}: ${n.links_beyond_income} links beyond income`}, gN);
     const r = center ? 13 : 4 + Math.min(6, n.links_beyond_income * 0.9);
     el('circle', {cx: P.x, cy: P.y, r, fill: center ? C.hi : C.gold, stroke: C.night, 'stroke-width': 2}, g);
-    if (center) text(g, P.x, P.y + 30, 'Income', {'text-anchor': 'middle', class: 'lbl'});
+    if (center) text(g, P.x, P.y + 30, 'Income', {'text-anchor': 'middle', class: 'lbl', style: `font-size:${fs}px`});
     else {
       const right = Math.cos(P.a) > 0.02, left = Math.cos(P.a) < -0.02, anchor = right ? 'start' : left ? 'end' : 'middle';
       let lx = P.x + Math.cos(P.a) * (r + 7), ly = P.y + Math.sin(P.a) * (r + 7) + 4;
-      const w = n.short_label.length * 6.6, box = () => ({x: anchor === 'start' ? lx : anchor === 'end' ? lx - w : lx - w / 2, y: ly - 11, w, h: 14});
+      const w = n.short_label.length * fs * 0.55, box = () => ({x: anchor === 'start' ? lx : anchor === 'end' ? lx - w : lx - w / 2, y: ly - fs + 1, w, h: fs + 2});
       const hits = b => labelBoxes.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y);
-      for (let i = 0; i < 4 && hits(box()); i++) ly += Math.sin(P.a) < 0 ? -13 : 13;   // push outwards, away from the ring
+      for (let i = 0; i < 4 && hits(box()); i++) ly += Math.sin(P.a) < 0 ? -(fs + 1) : fs + 1;   // push outwards, away from the ring
       labelBoxes.push(box());
-      text(g, lx, ly, n.short_label, {'text-anchor': anchor});
+      text(g, lx, ly, n.short_label, {'text-anchor': anchor, style: `font-size:${fs}px`});
     }
     const show = () => { focus(n.indicator); tip.show([{value: n.label, label: n.domain + ' · ' + n.source}, {label: 'Countries', value: int(n.countries || 0)}, ...(center ? [] : [{label: 'Correlation with income', value: n.rho_with_income != null ? sgn(n.rho_with_income) : '–'}, {label: 'Links beyond income', value: String(n.links_beyond_income), color: C.gold}])], P.x, P.y - r); };
     g.addEventListener('pointerenter', show); g.addEventListener('focus', show);
@@ -776,7 +783,7 @@ const hpR2 = HP[0].r_squared; const hfit = olsLog(HP, r => r.gdp_pcap, r => r.ha
 const perDoubling = (hfit(2000) - hfit(1000));
 const hpLabel = new Set(hpTop.filter(r => r.population >= 5e6).slice(0, 5).map(r => r.iso3));
 $('h-happy').textContent = 'Money buys happiness, at a falling rate.';
-$('t-happy').textContent = `Income alone explains ${pctU(hpR2)} of the gap in life evaluations across ${HP.length} countries. Each doubling of income adds about ${perDoubling.toFixed(2)} points on the 0 to 10 scale, so the first thousand dollars count far more than the last. ${hpTop.filter(r => hpLabel.has(r.iso3)).slice(0, 4).map(r => r.country_name).join(', ')} report more happiness than their income predicts.`;
+$('t-happy').textContent = `Income alone explains ${pctU(hpR2)} of the gap in life evaluations across ${HP.length} countries. Each doubling of income adds about ${perDoubling.toFixed(2)} points on the 0 to 10 scale, so the first thousand dollars count far more than the last. ${andJoin(hpTop.filter(r => hpLabel.has(r.iso3)).slice(0, 4).map(r => r.country_name))} report more happiness than their income predicts.`;
 const drawHappy = () => scatter($('c-happy'), HP, {x: r => r.gdp_pcap, y: r => r.happiness / 10, logx: true, xTick: v => money(v), yTick: v => v.toFixed(0), xLabel: 'GDP per person, PPP $ (log)', yLabel: 'life evaluation, 0 to 10', aria: 'Scatter of life evaluation against GDP per person',
   fit: fitLine(HP, r => r.gdp_pcap, hfit), hi: r => hpLabel.has(r.iso3), label: r => hpLabel.has(r.iso3) ? r.country_name : null,
   tip: r => [{value: r.country_name, label: (r.happiness / 10).toFixed(1) + ' / 10'}, {label: 'Expected for income', value: (r.expected_happiness / 10).toFixed(1)}, {label: 'GDP per person', value: money(r.gdp_pcap)}]});
@@ -785,7 +792,7 @@ table($('tb-happy'), [['Country', r => r.country_name], ['Life evaluation', r =>
 /* 2 olympics */
 const olyTop = OLY.filter(r => r.medals >= 10).slice(0, 10);
 const cuba = OLY.find(r => r.iso3 === 'CUB'), kenya = OLY.find(r => r.iso3 === 'KEN');
-$('h-oly').textContent = 'Some small nations win ten or twenty times the medals their size and wealth predict.';
+$('h-oly').textContent = `Jamaica wins ${Math.round(jam.medals / jam.expected_medals)} times the Olympic medals its size and wealth predict.`;
 $('t-oly').textContent = `From Sydney 2000 to Tokyo 2020, Jamaica won ${jam.medals} Summer Olympic medals; a model of population and income across ${OLY[0].n_countries} countries expects about ${Math.max(1, Math.round(jam.expected_medals))}. Cuba (${cuba.medals} vs ${Math.round(cuba.expected_medals)}) and Kenya (${kenya.medals} vs ${Math.round(kenya.expected_medals)}) beat the model by an order of magnitude too: sprinting, boxing and distance running are focused national strengths. A relay gold counts once.`;
 [['Medals won', C.gold], ['Expected from population and income', C.blue]].forEach(([t, c]) => { const s = h('span'); const i = h('i'); i.style.background = c; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-oly').appendChild(s); });
 const drawOly = () => barsExpected($('c-oly'), olyTop, {name: r => r.country_name, v: r => r.medals, e: r => r.expected_medals, fmt: v => f1(v), label: r => `${r.medals} · ${f1(r.expected_medals)} exp.`, aria: 'Olympic medals won versus expected, top overperformers',
@@ -796,9 +803,9 @@ table($('tb-oly'), [['Country', r => r.country_name], ['Medals', r => r.medals],
 const FT = FOOT.filter(r => r.iso3 && r.population); const ftTop = [...FT].sort((a, b) => b.rating_above_expected - a.rating_above_expected);
 const uru = FOOT.find(r => r.iso3 === 'URY'), por = FOOT.find(r => r.iso3 === 'PRT'), lead = FOOT[0];
 const ftLabel = new Set([...ftTop.filter(r => r.population < 15e6).slice(0, 5).map(r => r.iso3), lead.iso3, 'CHN', 'IND', 'USA'].filter(Boolean));
-$('h-foot').textContent = `Football’s giant-killers: Uruguay is rated ${uru.world_rank}th with ${ppl(uru.population)} people.`;
+$('h-foot').textContent = `Football’s giant-killers: Uruguay is rated ${ord(uru.world_rank)} with ${ppl(uru.population)} people.`;
 const ftSmall = ftTop.filter(r => r.population < 15e6).slice(0, 5);
-$('t-foot').textContent = `I rebuilt Elo ratings from ${int(K.football_matches_rated)} matches between FIFA-recognised teams since 1872. ${lead.team} leads today. Among countries under 15 million people, ${ftSmall.map(r => r.team).join(', ')} beat what their size and income predict by the widest margins; Portugal, with ${ppl(por.population)} people, is rated ${por.world_rank}th in the world. England, Scotland, Wales and Northern Ireland are rated but not modelled, as they are not separate countries in the population data.`;
+$('t-foot').textContent = `I rebuilt Elo ratings from ${int(K.football_matches_rated)} matches between FIFA-recognised teams since 1872. ${lead.team} leads today. Among countries under 15 million people, ${andJoin(ftSmall.map(r => r.team))} beat what their size and income predict by the widest margins; Portugal, with ${ppl(por.population)} people, is rated ${ord(por.world_rank)} in the world. England, Scotland, Wales and Northern Ireland are rated but not modelled, as they are not separate countries in the population data.`;
 const drawFoot = () => scatter($('c-foot'), FT, {x: r => r.population, y: r => r.rating, logx: true, xTick: v => ppl(v), yTick: v => int(v), xLabel: 'population (log)', yLabel: 'Elo rating', aria: 'Scatter of football Elo rating against population',
   hi: r => ftTop.filter(t => t.population < 15e6).slice(0, 5).some(t => t.iso3 === r.iso3), label: r => ftLabel.has(r.iso3) ? r.team : null,
   tip: r => [{value: r.team, label: `Elo ${int(r.rating)} · world #${r.world_rank}`}, {label: 'Expected for size and income', value: int(r.expected_rating)}, {label: 'Population', value: ppl(r.population)}, {label: 'Change since 2000', value: r.change_since_2000 != null ? sgn(r.change_since_2000, 0) : '–'}]});
@@ -809,7 +816,7 @@ const pTop = PASS[0]; const pOver = [...PASS].filter(r => r.power_above_expected
 const pLabel = new Set([...PASS.slice(0, 3).map(r => r.iso3), ...pOver.map(r => r.iso3)]);
 const pfit = olsLog(PASS.filter(r => r.gdp_pcap && r.population >= 1e6), r => r.gdp_pcap, r => r.passport_power);
 $('h-pass').textContent = 'Passport power follows income, with notable exceptions.';
-$('t-pass').textContent = `The strongest passport opens ${pTop.passport_power} destinations without a visa arranged in advance. Income explains most of the spread, but ${pOver.map(r => `${r.country_name} (${r.passport_power})`).join(', ')} open far more doors than their income predicts, usually thanks to regional agreements.`;
+$('t-pass').textContent = `The strongest passport opens ${pTop.passport_power} destinations without a visa arranged in advance. Income explains most of the spread, but ${andJoin(pOver.map(r => `${r.country_name} (${r.passport_power})`))} open far more doors than their income predicts, usually thanks to regional agreements.`;
 const drawPass = () => scatter($('c-pass'), PASS.filter(r => r.gdp_pcap), {x: r => r.gdp_pcap, y: r => r.passport_power, logx: true, xTick: v => money(v), yTick: v => int(v), yMin: 0, xLabel: 'GDP per person, PPP $ (log)', yLabel: 'destinations', aria: 'Scatter of passport power against GDP per person',
   fit: fitLine(PASS.filter(r => r.gdp_pcap), r => r.gdp_pcap, pfit), hi: r => pLabel.has(r.iso3), label: r => pLabel.has(r.iso3) ? r.country_name : null,
   tip: r => [{value: r.country_name, label: `${r.passport_power} destinations · rank ${r.power_rank}`}, {label: 'Expected for income', value: r.expected_power != null ? int(r.expected_power) : '–'}, {label: 'Passports it admits visa-free', value: String(r.passport_openness)}]});
@@ -819,7 +826,7 @@ table($('tb-pass'), [['Passport', r => r.country_name], ['Destinations', r => r.
 const BM = D.bigmac; const bmTop = BM.slice(0, 7), bmBot = BM.slice(-7).reverse();
 $('c-mac-sub').textContent = `${BM.length} countries · ${dlabel(BM[0].price_date)}`;
 $('h-mac').textContent = `A day’s income buys ${int(BM[0].big_macs_per_day_of_income)} Big Macs in ${BM[0].country_name}, and ${f1(BM[BM.length - 1].big_macs_per_day_of_income)} in ${BM[BM.length - 1].country_name}.`;
-$('t-mac').textContent = `The Big Mac index compares the same burger everywhere. Dividing a day of GDP per person by the local price in dollars shows what income actually buys: prices are not set by income alone, so cheap burgers in rich places (${bmTop.slice(0, 3).map(r => r.country_name).join(', ')}) and pricey ones in poorer places sit at the ends.`;
+$('t-mac').textContent = `The Big Mac index compares the same burger everywhere. Dividing a day of GDP per person by the local price in dollars shows what income actually buys: prices are not set by income alone, so cheap burgers in rich places (${andJoin(bmTop.slice(0, 3).map(r => r.country_name))}) and pricey ones in poorer places sit at the ends.`;
 const drawMac = () => hbars($('c-mac'), [{title: 'MOST BIG MACS PER DAY OF INCOME', rows: bmTop, color: C.gold}, {title: 'FEWEST', rows: bmBot, color: C.blue}], {v: r => r.big_macs_per_day_of_income, name: r => r.country_name, fmt: v => f1(v), aria: 'Big Macs bought by a day of GDP per person',
   tip: r => [{value: f1(r.big_macs_per_day_of_income) + ' Big Macs', label: r.country_name}, {label: 'Price', value: '$' + r.dollar_price.toFixed(2)}, {label: 'GDP per person', value: money(r.gdp_per_person_usd)}]});
 table($('tb-mac'), [['Country', r => r.country_name], ['Big Macs per day', r => f1(r.big_macs_per_day_of_income)], ['Price ($)', r => r.dollar_price.toFixed(2)], ['GDP per person ($)', r => int(r.gdp_per_person_usd)]], BM);
@@ -859,7 +866,7 @@ table($('tb-dec'), [['Country', r => r.country_name], ['GDP', r => pct(r.gdp_cha
 
 /* 9 energy */
 const EN = D.energy; const world = EN.find(r => r.iso3 === 'WLD'); const enTop = EN.filter(r => r.iso3 !== 'WLD').slice(0, 10);
-$('h-energy').textContent = `Solar and wind went from ${f1(world.solar_wind_2015)}% to ${f1(world.solar_wind_latest)}% of the world’s electricity in ten years.`;
+$('h-energy').textContent = `Solar and wind went from ${f1(world.solar_wind_2015)}% to ${f1(world.solar_wind_latest)}% of the world’s electricity in ${world.latest_year - 2015} years.`;
 $('t-energy').textContent = `The fastest movers changed their grids within a decade: ${enTop.slice(0, 3).map(r => `${r.country_name} from ${int(r.solar_wind_2015)}% to ${int(r.solar_wind_latest)}%`).join('; ')}. Among countries generating at least 5 TWh a year, ${EN.filter(r => r.iso3 !== 'WLD' && r.solar_wind_latest >= 30).length} now get 30% or more of their power from the sun and wind.`;
 [['2015', C.blue], [String(world.latest_year), C.gold]].forEach(([t, c]) => { const s = h('span'); const i = h('i'); i.style.background = c; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-energy').appendChild(s); });
 const drawEnergy = () => dumbbell($('c-energy'), [world, ...enTop], {name: r => r.country_name, a: r => r.solar_wind_2015, b: r => r.solar_wind_latest, fmt: v => int(v) + '%', tick: v => int(v) + '%', hi: r => r.iso3 === 'WLD', aria: 'Solar and wind share of electricity, 2015 and latest',
@@ -871,7 +878,7 @@ const hfit2 = olsLog(HL, r => r.health_spend_per_person, r => r.life_expectancy)
 const hBest = [...HL].filter(r => r.health_spend_per_person >= 1500).sort((a, b) => b.residual - a.residual).slice(0, 4);
 const hLabel = new Set(['USA', ...hBest.map(r => r.iso3), 'CHE', 'NOR']);
 $('h-health').textContent = `The US spends the most on health, yet lives ${f1(-usaH.residual)} years less than that spending buys elsewhere.`;
-$('t-health').textContent = `At $${int(usaH.health_spend_per_person)} per person (PPP), US health spending is the highest in the data, while life expectancy is ${f1(usaH.life_expectancy)} years: ${f1(-usaH.residual)} below what the pattern across ${HL.length} countries predicts for that spending. ${hBest.map(r => r.country_name).join(', ')} get the most years for their money among higher spenders.`;
+$('t-health').textContent = `At $${int(usaH.health_spend_per_person)} per person (PPP), US health spending is the highest in the data, while life expectancy is ${f1(usaH.life_expectancy)} years: ${f1(-usaH.residual)} below what the pattern across ${HL.length} countries predicts for that spending. ${andJoin(hBest.map(r => r.country_name))} get the most years for their money among higher spenders.`;
 const drawHealth = () => scatter($('c-health'), HL, {x: r => r.health_spend_per_person, y: r => r.life_expectancy, logx: true, xTick: v => money(v), yTick: v => int(v), xLabel: 'health spending per person, PPP $ (log)', yLabel: 'life expectancy, years', aria: 'Scatter of life expectancy against health spending per person',
   fit: fitLine(HL, r => r.health_spend_per_person, hfit2), hi: r => hLabel.has(r.iso3), label: r => hLabel.has(r.iso3) ? r.country_name : null,
   tip: r => [{value: r.country_name, label: f1(r.life_expectancy) + ' years'}, {label: 'Expected for spending', value: f1(r.expected_life_expectancy)}, {label: 'Spending per person', value: money(r.health_spend_per_person)}]});
