@@ -244,6 +244,24 @@ pre.code .k{color:var(--gold)}
 .chart .lbl{font-family:var(--fb);font-size:12px;fill:var(--head);paint-order:stroke;stroke:#0A1122;stroke-width:3px;stroke-linejoin:round}
 .chart .axl{font-family:var(--fm);font-size:11px;fill:var(--muted)}
 .cov td:last-child{color:var(--head)}
+/* zoomable charts */
+.ztop{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;margin:2px 0 10px}
+.zchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.zchips button,.zbar button{font:500 11.5px/1 var(--fm);letter-spacing:.04em;color:var(--body);background:rgba(4,6,11,.35);border:1px solid var(--hair);padding:7px 10px;cursor:pointer;border-radius:0;transition:border-color .15s,color .15s,background .15s}
+.zchips button:hover,.zbar button:not(:disabled):hover{border-color:var(--gold);color:var(--head)}
+.zchips button.on{background:var(--gold);border-color:var(--gold);color:var(--night)}
+.zchips button:focus-visible,.zbar button:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+.zinfo{font:500 11.5px/1 var(--fm);color:var(--muted);margin-left:4px}
+.zbar{display:flex;gap:4px;margin-left:auto}
+.zbar button{min-width:32px;font-size:13px;padding:6px 9px}
+.zbar button:last-child{font-size:11.5px}
+.zbar button:disabled{opacity:.32;cursor:default}
+.chart.zc{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.chart.zoomed.zpan svg{cursor:grab}
+.chart.panning svg{cursor:grabbing}
+.chart.zc::after{content:attr(data-hint);position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);font:500 12px/1.3 var(--fm);color:var(--head);background:rgba(10,17,34,.94);border:1px solid var(--hair2);padding:9px 12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .25s;z-index:6}
+.chart.zc.zhint::after{opacity:1}
+@media (max-width:520px){.zchips button{padding:7px 8px}.zbar button{padding:6px 8px}}
 @media (max-width:1080px){.net-wrap{grid-template-columns:minmax(0,1fr)}.flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:860px){.stories .finding{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:520px){.flow{grid-template-columns:minmax(0,1fr)}}
@@ -448,6 +466,7 @@ function tooltip(host) {
       });
       const hw = host.clientWidth, tw = t.offsetWidth || 170;
       t.style.left = Math.max(0, Math.min(hw - tw, x - tw / 2)) + 'px';
+      const sv = host.querySelector('svg'); y += sv ? sv.offsetTop : 0;   // the zoom toolbar sits above the chart
       t.style.top = Math.max(0, y - (t.offsetHeight || 60) - 14) + 'px';
       t.classList.add('on');
     },
@@ -533,27 +552,33 @@ function line(host, data, o) {
 
 /* ---------- horizontal bars (two groups) ---------- */
 function hbars(host, groups, o) {
-  const W = host.clientWidth || 600; const rowH = 26, gapH = 34, labelW = Math.min(210, W * 0.46), m = {r: 52};
+  const W = host.clientWidth || 600; const rowH = 26, gapH = 34, labelW = Math.min(210, W * 0.46), m = {r: 52, t: 20};
   const rows = groups.reduce((n, g) => n + g.rows.length, 0);
-  const H = rows * rowH + groups.length * gapH;
+  const H = m.t + rows * rowH + groups.length * gapH;
   host.replaceChildren();
+  const zrow = ztop(host);
   const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
   const tip = tooltip(host);
   const max = Math.max(...groups.flatMap(g => g.rows.map(o.v)));
-  const pw = W - labelW - m.r; let y = 0;
+  const pw = W - labelW - m.r, ax = vaxis(host, [0, max], labelW, pw, W < 480 ? 3 : 4); let y = m.t;
+  ax.tk.forEach(v => { const x = ax.X(v); el('line', {x1: x, x2: x, y1: m.t - 4, y2: H, stroke: C.grid}, svg); text(svg, x, 11, o.tick ? o.tick(v, ax.step) : fmtStep(v, ax.step), {'text-anchor': 'middle'}); });
   groups.forEach(g => {
     text(svg, 0, y + 20, g.title, {class: 'an', 'font-size': 11, 'letter-spacing': '0.08em'}); y += gapH - 6;
     g.rows.forEach(r => {
-      const v = o.v(r), bw = Math.max(2, v / max * pw), by = y + (rowH - 14) / 2;
+      const v = o.v(r), x0 = ax.cx(0), bw = Math.max(v > ax.d0 ? 2 : 0, ax.cx(v) - x0), by = y + (rowH - 14) / 2;
       const nm = o.name(r); const lt = text(svg, 0, y + rowH / 2 + 4, nm, {fill: '#C9CDD8', 'font-family': 'Figtree, sans-serif', 'font-size': 13});
       if (lt.getComputedTextLength && lt.getComputedTextLength() > labelW - 10) { let s = nm; while (s.length > 4 && lt.getComputedTextLength() > labelW - 10) { s = s.slice(0, -1); lt.textContent = s.trimEnd() + '…'; } const tt = el('title', {}, lt); tt.textContent = nm; }
-      const p = el('path', {d: roundRight(labelW, by, bw, 14, 4), fill: g.color, class: 'mk', tabindex: 0, 'aria-label': `${nm}: ${o.fmt(v)}`}, svg);
-      text(svg, labelW + bw + 7, y + rowH / 2 + 4, o.fmt(v), {class: 'vl'});
-      const show = () => tip.show(o.tip(r), labelW + bw / 2, by); p.addEventListener('pointerenter', show); p.addEventListener('focus', show);
-      p.addEventListener('pointerleave', () => tip.hide()); p.addEventListener('blur', () => tip.hide());
+      const p = el('path', {d: bw > 0 ? roundRight(x0, by, bw, 14, 4) : `M${x0},${by}h0`, fill: g.color, class: 'mk', tabindex: 0, 'aria-label': `${nm}: ${o.fmt(v)}`}, svg);
+      if (v > ax.d1) brk(svg, x0 + bw, by, 14);
+      text(svg, x0 + bw + 7, y + rowH / 2 + 4, o.fmt(v), {class: 'vl'});
+      const hit = el('rect', {x: labelW, y, width: pw, height: rowH, fill: 'transparent'}, svg);
+      const show = () => tip.show(o.tip(r), x0 + Math.max(bw, 8) / 2, by);
+      [p, hit].forEach(n => { n.addEventListener('pointerenter', show); n.addEventListener('pointerleave', () => tip.hide()); });
+      p.addEventListener('focus', show); p.addEventListener('blur', () => tip.hide());
       y += rowH;
     });
   });
+  zoomable(host, svg, zrow, {axes: 'x', full: {x: [0, max]}, plot: {l: labelW, t: 0, w: pw, h: H}, vw: W, anchor: true, redraw: () => hbars(host, groups, o)});
 }
 
 
@@ -576,24 +601,142 @@ function logTicks(lo, hi) {
 }
 const fmtLog = v => { const x = Math.pow(10, v); return x >= 1e9 ? (x / 1e9) + 'bn' : x >= 1e6 ? (x / 1e6) + 'M' : x >= 1e3 ? (x / 1e3) + 'K' : String(Math.round(x * 100) / 100); };
 
+/* ---------- zoom, pan and region filters ---------- */
+// every chart keeps its own view: value ranges for x and y (null = everything) and a region filter
+const ZS = new WeakMap();
+const zstate = host => { let s = ZS.get(host); if (!s) { s = {x: null, y: null, region: 'all'}; ZS.set(host, s); } return s; };
+const REGIONS = [['africa', 'Africa'], ['americas', 'Americas'], ['asia', 'Asia and Pacific'], ['europe', 'Europe']];
+function clampRange(a, b, full, maxZoom) {
+  const fw = full[1] - full[0], w = Math.max(b - a, fw / maxZoom);
+  if (w >= fw * 0.999) return null;
+  a = Math.max(full[0], Math.min(a, full[1] - w));
+  return [a, a + w];
+}
+function zoomAxis(cur, full, f, at, maxZoom) { const [a, b] = cur || full, c = a + at * (b - a), w = (b - a) * f; return clampRange(c - at * w, c - at * w + w, full, maxZoom); }
+function panAxis(cur, full, d, maxZoom) { if (!cur) return null; const w = cur[1] - cur[0]; return clampRange(cur[0] - d * w, cur[1] - d * w, full, maxZoom); }
+function zredraw(host) { const st = zstate(host); if (st.raf) return; st.raf = requestAnimationFrame(() => { st.raf = 0; st.spec && st.spec.redraw(); }); }
+function zoomAt(host, f, fx, fy) {
+  const st = zstate(host), s = st.spec; if (!s) return;
+  // bar charts keep zero on the left edge, so a zoom stretches the short bars instead of cutting the long ones
+  if (s.axes.includes('x')) st.x = s.anchor ? clampRange(s.full.x[0], s.full.x[0] + ((st.x || s.full.x)[1] - s.full.x[0]) * f, s.full.x, s.maxZoom) : zoomAxis(st.x, s.full.x, f, fx, s.maxZoom);
+  if (s.axes.includes('y')) st.y = zoomAxis(st.y, s.full.y, f, s.yDown ? fy : 1 - fy, s.maxZoom);
+  zredraw(host);
+}
+// a row above the chart that holds the region chips (if any) and the zoom buttons
+function ztop(host) { const row = h('div', 'ztop'); host.appendChild(row); return row; }
+function zchips(row, host, regions, redraw, info) {
+  const st = zstate(host), wrap = h('div', 'zchips');
+  wrap.setAttribute('role', 'group'); wrap.setAttribute('aria-label', 'Filter by region');
+  [['all', 'All'], ...REGIONS.filter(([k]) => regions.has(k))].forEach(([k, t]) => {
+    const b = h('button', st.region === k ? 'on' : null, t); b.type = 'button'; b.setAttribute('aria-pressed', String(st.region === k));
+    b.addEventListener('click', () => { st.region = k; st.x = st.y = null; redraw(); });
+    wrap.appendChild(b);
+  });
+  if (info) wrap.appendChild(h('span', 'zinfo', info));
+  row.appendChild(wrap);
+}
+// spec: {axes: 'x' | 'xy', full: {x: [a, b], y: [a, b]}, plot: {l, t, w, h} in svg units, vw: svg units across, yDown, maxZoom, redraw}
+let zHinted = false;
+function zoomable(host, svg, row, spec) {
+  const st = zstate(host); st.spec = Object.assign({maxZoom: 24}, spec); st.svg = svg;
+  const zoomed = !!(st.x || st.y);
+  host.classList.add('zc'); host.classList.toggle('zoomed', zoomed); host.classList.toggle('zpan', !spec.anchor);
+  host.style.touchAction = zoomed && !spec.anchor ? 'none' : 'pan-y';
+  const bar = h('div', 'zbar'); bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Zoom');
+  const btn = (txt, label, fn, off) => { const b = h('button', null, txt); b.type = 'button'; b.title = label; b.setAttribute('aria-label', label); b.disabled = !!off; b.addEventListener('click', fn); bar.appendChild(b); };
+  btn('+', 'Zoom in (or pinch, or Ctrl + scroll)', () => zoomAt(host, 1 / 1.6, 0.5, 0.5));
+  btn('−', 'Zoom out', () => zoomAt(host, 1.6, 0.5, 0.5), !zoomed);
+  btn('Reset', 'Show everything', () => { st.x = st.y = null; zredraw(host); }, !zoomed);
+  row.appendChild(bar);
+  if (st.bound) return;
+  st.bound = true;
+  const geo = () => { const s = st.spec, r = st.svg.getBoundingClientRect(); return {s, r, k: s.vw / (r.width || s.vw)}; };
+  const frac = (cx, cy) => { const {s, r, k} = geo(); const c = v => Math.min(1, Math.max(0, v)); return [c(((cx - r.left) * k - s.plot.l) / s.plot.w), c(((cy - r.top) * k - s.plot.t) / s.plot.h)]; };
+  host.addEventListener('wheel', e => {
+    if (!(e.ctrlKey || e.metaKey)) return;   // a plain wheel keeps scrolling the page
+    e.preventDefault();
+    const [fx, fy] = frac(e.clientX, e.clientY);
+    zoomAt(host, Math.exp(Math.max(-0.5, Math.min(0.5, e.deltaY * 0.01))), fx, fy);
+  }, {passive: false});
+  host.addEventListener('dblclick', e => { if (e.target.closest('.ztop')) return; const [fx, fy] = frac(e.clientX, e.clientY); zoomAt(host, e.shiftKey ? 1.6 : 1 / 1.6, fx, fy); });
+  const ptrs = new Map(); let pinch = null;
+  host.addEventListener('pointerdown', e => {
+    if (e.target.closest('.ztop') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY}); pinch = null;
+    if (!zHinted && !st.x && !st.y) {   // the first touch on any chart says how to zoom, once per visit
+      zHinted = true; host.dataset.hint = e.pointerType === 'mouse' ? 'Double-click, or Ctrl + scroll, to zoom' : 'Pinch or double-tap to zoom';
+      host.classList.add('zhint'); setTimeout(() => host.classList.remove('zhint'), 2200);
+    }
+    if (ptrs.size === 2 || ((st.x || st.y) && !st.spec.anchor)) { try { host.setPointerCapture(e.pointerId); } catch (_) { /* not capturable */ } }
+  });
+  host.addEventListener('pointermove', e => {
+    const prev = ptrs.get(e.pointerId); if (!prev) return;
+    ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+    const {s, k} = geo();
+    if (ptrs.size === 1 && (st.x || st.y) && !s.anchor) {
+      host.classList.add('panning');
+      if (s.axes.includes('x')) st.x = panAxis(st.x, s.full.x, (e.clientX - prev.x) * k / s.plot.w, s.maxZoom);
+      if (s.axes.includes('y')) st.y = panAxis(st.y, s.full.y, (s.yDown ? 1 : -1) * (e.clientY - prev.y) * k / s.plot.h, s.maxZoom);
+      zredraw(host);
+    } else if (ptrs.size === 2) {
+      const [p, q] = [...ptrs.values()], d = Math.hypot(p.x - q.x, p.y - q.y) || 1, mid = frac((p.x + q.x) / 2, (p.y + q.y) / 2);
+      if (pinch) zoomAt(host, pinch / d, mid[0], mid[1]);
+      pinch = d;
+    }
+  });
+  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) host.classList.remove('panning'); };
+  host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up); host.addEventListener('lostpointercapture', up);
+}
+// value axis for bar charts: [d0, d1], a scale and ticks that follow the zoom
+// two short cuts across a bar that runs past the right edge
+const brk = (svg, x, y, hgt) => [10, 5].forEach(d => el('line', {x1: x - d - 3, y1: y + hgt + 1, x2: x - d + 2, y2: y - 1, stroke: C.night, 'stroke-width': 2}, svg));
+function vaxis(host, full, x0, pw, n) {
+  const st = zstate(host), [d0, d1] = st.x || full, X = v => x0 + (v - d0) / (d1 - d0) * pw;
+  let tk = niceTicks(d0, d1, n); if (tk.length < 3) tk = niceTicks(d0, d1, n + 2);
+  const step = tk.length > 1 ? tk[1] - tk[0] : null;
+  return {d0, d1, X, tk, step, cx: v => Math.max(x0, Math.min(x0 + pw, X(v)))};
+}
+// tick labels that gain decimals when a zoom makes the steps small
+const stepDec = s => { let k = 0; while (k < 4 && Math.abs(s * 10 ** k - Math.round(s * 10 ** k)) > 1e-6) k++; return k; };
+const fmtStep = (v, s) => s && stepDec(s) ? (+v).toFixed(stepDec(s)) : int(v);
+const moneyS = (n, s) => !s ? money(n) : n >= 1000 ? '$' + fmtStep(n / 1000, s / 1000) + 'K' : '$' + fmtStep(n, s);
+const pplS = (n, s) => !s ? ppl(n) : n >= 1e9 ? fmtStep(n / 1e9, s / 1e9) + 'bn' : n >= 1e6 ? fmtStep(n / 1e6, s / 1e6) + 'M' : n >= 1e3 ? fmtStep(n / 1e3, s / 1e3) + 'K' : int(n);
+function logTicksZ(lo, hi, n) {
+  const lt = logTicks(lo, hi); if (lt.length >= 3) return {t: lt, step: null};
+  const a = Math.pow(10, lo), b = Math.pow(10, hi), t = niceTicks(a, b, n).filter(v => v > 0);
+  return {t: t.map(v => Math.log10(v)), step: t.length > 1 ? t[1] - t[0] : null};
+}
+
 /* ---------- scatter ---------- */
+// zoom and pan both axes; region chips filter the points and the axes rescale to what is left
 function scatter(host, rows, o) {
+  const st = zstate(host);
   const W = host.clientWidth || 600, H = o.height || (W < 480 ? 300 : 380);
   const m = {l: 46, r: 12, t: 14, b: 38};
   host.replaceChildren();
+  const row = ztop(host);
+  const okRows = rows.filter(r => o.x(r) != null && o.y(r) != null && (!o.logx || o.x(r) > 0));
+  const regOf = r => r.region_4 || REG[r.iso3];
+  const regs = new Set(okRows.map(regOf).filter(Boolean));
+  if (st.region !== 'all' && !regs.has(st.region)) st.region = 'all';
+  const pts = st.region === 'all' ? okRows : okRows.filter(r => regOf(r) === st.region);
   const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
   const tip = tooltip(host);
   const pw = W - m.l - m.r, ph = H - m.t - m.b;
-  const pts = rows.filter(r => o.x(r) != null && o.y(r) != null && (!o.logx || o.x(r) > 0));
   const tx = v => o.logx ? Math.log10(v) : v;
   const xv = pts.map(r => tx(o.x(r))), yv = pts.map(o.y);
-  let x0 = Math.min(...xv), x1 = Math.max(...xv); const xp = (x1 - x0) * 0.04; x0 -= xp; x1 += xp;
+  let x0 = Math.min(...xv), x1 = Math.max(...xv); const xp = (x1 - x0) * 0.04 || 0.5; x0 -= xp; x1 += xp;
   let y0 = o.yMin != null ? o.yMin : Math.min(...yv), y1 = o.yMax != null ? o.yMax : Math.max(...yv);
-  const yp = (y1 - y0) * 0.06; if (o.yMin == null) y0 -= yp; if (o.yMax == null) y1 += yp;
+  const yp = (y1 - y0) * 0.06 || 0.5; if (o.yMin == null) y0 -= yp; if (o.yMax == null) y1 += yp;
+  const full = {x: [x0, x1], y: [y0, y1]};
+  [x0, x1] = st.x || full.x; [y0, y1] = st.y || full.y;
   const X = v => m.l + (tx(v) - x0) / (x1 - x0) * pw, Y = v => m.t + ph - (v - y0) / (y1 - y0) * ph;
-  niceTicks(y0, y1, 4).forEach(v => { const y = Y(v); el('line', {x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: C.grid}, svg); text(svg, m.l - 8, y + 4, o.yTick ? o.yTick(v) : compact(v), {'text-anchor': 'end'}); });
-  const xt = o.logx ? logTicks(x0, x1) : niceTicks(x0, x1, W < 480 ? 3 : 5);
-  xt.forEach(v => { const x = m.l + (v - x0) / (x1 - x0) * pw; el('line', {x1: x, x2: x, y1: m.t, y2: m.t + ph, stroke: C.grid}, svg); text(svg, x, H - 20, o.xTick ? o.xTick(o.logx ? Math.pow(10, v) : v) : (o.logx ? fmtLog(v) : compact(v)), {'text-anchor': 'middle'}); });
+  let yt = niceTicks(y0, y1, 4); if (yt.length < 3) yt = niceTicks(y0, y1, 6);
+  const ys = yt.length > 1 ? yt[1] - yt[0] : null;
+  yt.forEach(v => { const y = Y(v); el('line', {x1: m.l, x2: W - m.r, y1: y, y2: y, stroke: C.grid}, svg); text(svg, m.l - 8, y + 4, o.yTick ? o.yTick(v, ys) : compact(v), {'text-anchor': 'end'}); });
+  let xt, xs = null;
+  if (o.logx) ({t: xt, step: xs} = logTicksZ(x0, x1, W < 480 ? 3 : 5)); else { xt = niceTicks(x0, x1, W < 480 ? 3 : 5); xs = xt.length > 1 ? xt[1] - xt[0] : null; }
+  xt.forEach(v => { const x = m.l + (v - x0) / (x1 - x0) * pw; el('line', {x1: x, x2: x, y1: m.t, y2: m.t + ph, stroke: C.grid}, svg); const raw = o.logx ? +Math.pow(10, v).toPrecision(12) : v; text(svg, x, H - 20, o.xTick ? o.xTick(raw, xs) : (o.logx ? fmtLog(v) : compact(v)), {'text-anchor': 'middle'}); });
   if (o.zero) {
     if (o.zero.x && x0 < 0 && x1 > 0) { const x = m.l + (0 - x0) / (x1 - x0) * pw; el('line', {x1: x, x2: x, y1: m.t, y2: m.t + ph, stroke: 'rgba(255,236,200,.35)'}, svg); }
     if (o.zero.y && y0 < 0 && y1 > 0) el('line', {x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0), stroke: 'rgba(255,236,200,.35)'}, svg);
@@ -601,24 +744,31 @@ function scatter(host, rows, o) {
   text(svg, W - m.r, H - 4, o.xLabel || '', {'text-anchor': 'end', class: 'axl'});
   text(svg, m.l, m.t - 2, o.yLabel || '', {'text-anchor': 'start', class: 'axl'});
   const cid = 'clip' + Math.random().toString(36).slice(2, 8);
-  const cp = el('clipPath', {id: cid}, el('defs', {}, svg)); el('rect', {x: m.l, y: m.t, width: pw, height: ph}, cp);
+  const cp = el('clipPath', {id: cid}, el('defs', {}, svg)); el('rect', {x: m.l - 6, y: m.t - 6, width: pw + 12, height: ph + 12}, cp);
+  const plot = el('g', {'clip-path': `url(#${cid})`}, svg);
   if (o.fit && o.fit.length > 1) {
     const d = o.fit.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join('');
-    el('path', {d, fill: 'none', stroke: C.blue, 'stroke-width': 2, 'stroke-dasharray': '6 4', opacity: 0.9, 'clip-path': `url(#${cid})`}, svg);
+    const fc = el('clipPath', {id: cid + 'f'}, svg.querySelector('defs')); el('rect', {x: m.l, y: m.t, width: pw, height: ph}, fc);
+    el('path', {d, fill: 'none', stroke: C.blue, 'stroke-width': 2, 'stroke-dasharray': '6 4', opacity: 0.9, 'clip-path': `url(#${cid}f)`}, svg);
   }
-  const order = [...pts].sort((a, b) => (o.hi && o.hi(a) ? 1 : 0) - (o.hi && o.hi(b) ? 1 : 0));
+  const inView = r => { const cx = X(o.x(r)), cy = Y(o.y(r)); return cx >= m.l - 1 && cx <= m.l + pw + 1 && cy >= m.t - 1 && cy <= m.t + ph + 1; };
+  const shown = pts.filter(inView);
+  const order = [...shown].sort((a, b) => (o.hi && o.hi(a) ? 1 : 0) - (o.hi && o.hi(b) ? 1 : 0));
   order.forEach(r => {
     const cx = X(o.x(r)), cy = Y(o.y(r)), hi = o.hi && o.hi(r);
-    el('circle', {cx, cy, r: hi ? 5.5 : 4, fill: hi ? C.hi : C.gold, 'fill-opacity': hi ? 1 : 0.62, stroke: C.night, 'stroke-width': 1.5}, svg);
-    const hit = el('circle', {cx, cy, r: 9, fill: 'transparent', class: 'mk', tabindex: hi ? 0 : -1, 'aria-label': o.tip(r).map(t => t.label + ' ' + t.value).join(', ')}, svg);
+    el('circle', {cx, cy, r: hi ? 5.5 : 4, fill: hi ? C.hi : C.gold, 'fill-opacity': hi ? 1 : 0.62, stroke: C.night, 'stroke-width': 1.5}, plot);
+    const hit = el('circle', {cx, cy, r: 9, fill: 'transparent', class: 'mk', tabindex: hi ? 0 : -1, 'aria-label': o.tip(r).map(t => t.label + ' ' + t.value).join(', ')}, plot);
     const show = () => tip.show(o.tip(r), cx, cy);
     hit.addEventListener('pointerenter', show); hit.addEventListener('focus', show);
     hit.addEventListener('pointerleave', () => tip.hide()); hit.addEventListener('blur', () => tip.hide());
   });
+  // zoomed or filtered in: name the highlighted points first, then any point while there is room
+  const zoomedIn = !!(st.x || st.y), many = shown.length <= (W < 480 ? 14 : 24);
+  const labelOf = r => (o.label && o.label(r)) || ((zoomedIn || st.region !== 'all') && many ? r.country_name : null);
   const boxes = [];
   const overlaps = b => boxes.some(q => b.x < q.x + q.w && b.x + b.w > q.x && b.y < q.y + q.h && b.y + b.h > q.y) || b.x < m.l || b.x + b.w > W - 2 || b.y < 0 || b.y + b.h > m.t + ph;
-  pts.filter(r => o.label && o.label(r)).sort((a, b) => (o.labelRank ? o.labelRank(a) - o.labelRank(b) : 0)).forEach(r => {
-    const s = o.label(r), cx = X(o.x(r)), cy = Y(o.y(r)), w = s.length * 6.7 + 4, hgt = 15;
+  shown.filter(labelOf).sort((a, b) => ((o.label && o.label(a)) ? 0 : 1) - ((o.label && o.label(b)) ? 0 : 1) || (o.labelRank ? o.labelRank(a) - o.labelRank(b) : 0)).forEach(r => {
+    const s = labelOf(r), cx = X(o.x(r)), cy = Y(o.y(r)), w = s.length * 6.7 + 4, hgt = 15;
     const cands = [[cx + 8, cy - 8, 'start'], [cx - 8 - w, cy - 8, 'end'], [cx - w / 2, cy - 22, 'middle'], [cx - w / 2, cy + 8, 'middle']];
     for (const [bx, by, anchor] of cands) {
       const b = {x: bx, y: by, w, h: hgt};
@@ -630,6 +780,9 @@ function scatter(host, rows, o) {
     }
   });
   el('line', {x1: m.l, x2: W - m.r, y1: m.t + ph, y2: m.t + ph, stroke: 'rgba(255,236,200,.18)'}, svg);
+  const filtered = zoomedIn || st.region !== 'all';
+  if (regs.size > 1) zchips(row, host, regs, () => scatter(host, rows, o), filtered ? `${shown.length} of ${okRows.length} countries` : null);
+  zoomable(host, svg, row, {axes: 'xy', full, plot: {l: m.l, t: m.t, w: pw, h: ph}, vw: W, redraw: () => scatter(host, rows, o)});
 }
 
 /* ---------- dumbbell ---------- */
@@ -637,44 +790,52 @@ function dumbbell(host, rows, o) {
   const W = host.clientWidth || 600, rowH = 28, top = 26, labelW = Math.min(170, W * 0.36), m = {r: 46};
   const H = top + rows.length * rowH + 6;
   host.replaceChildren();
+  const row = ztop(host);
   const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
   const tip = tooltip(host);
   const max = o.max || Math.max(...rows.map(r => Math.max(o.a(r), o.b(r)))) * 1.04;
-  const pw = W - labelW - m.r, X = v => labelW + v / max * pw;
-  niceTicks(0, max, W < 480 ? 3 : 5).forEach(v => { const x = X(v); el('line', {x1: x, x2: x, y1: top - 6, y2: H, stroke: C.grid}, svg); text(svg, x, 12, o.tick ? o.tick(v) : compact(v), {'text-anchor': 'middle'}); });
+  const pw = W - labelW - m.r, ax = vaxis(host, [0, max], labelW, pw, W < 480 ? 3 : 5), X = ax.cx;
+  const inD = v => v >= ax.d0 - 1e-9 && v <= ax.d1 + 1e-9;
+  ax.tk.forEach(v => { const x = ax.X(v); el('line', {x1: x, x2: x, y1: top - 6, y2: H, stroke: C.grid}, svg); text(svg, x, 12, o.tick ? o.tick(v, ax.step) : (ax.step && ax.step < 1 ? fmtStep(v, ax.step) : compact(v)), {'text-anchor': 'middle'}); });
   rows.forEach((r, i) => {
     const y = top + i * rowH + rowH / 2, a = o.a(r), b = o.b(r);
     const nm = o.name(r); const lt = text(svg, 0, y + 4, nm, {fill: '#C9CDD8', 'font-family': 'Figtree, sans-serif', 'font-size': 13});
     if (lt.getComputedTextLength && lt.getComputedTextLength() > labelW - 10) { let s = nm; while (s.length > 4 && lt.getComputedTextLength() > labelW - 10) { s = s.slice(0, -1); lt.textContent = s.trimEnd() + '…'; } }
-    el('line', {x1: X(Math.min(a, b)), x2: X(Math.max(a, b)), y1: y, y2: y, stroke: 'rgba(255,236,200,.28)', 'stroke-width': 3, 'stroke-linecap': 'round'}, svg);
-    el('circle', {cx: X(a), cy: y, r: 5.5, fill: C.blue, stroke: C.night, 'stroke-width': 2}, svg);
-    el('circle', {cx: X(b), cy: y, r: 5.5, fill: o.hi && o.hi(r) ? C.hi : C.gold, stroke: C.night, 'stroke-width': 2}, svg);
+    if (X(Math.max(a, b)) > X(Math.min(a, b))) el('line', {x1: X(Math.min(a, b)), x2: X(Math.max(a, b)), y1: y, y2: y, stroke: 'rgba(255,236,200,.28)', 'stroke-width': 3, 'stroke-linecap': 'round'}, svg);
+    if (inD(a)) el('circle', {cx: X(a), cy: y, r: 5.5, fill: C.blue, stroke: C.night, 'stroke-width': 2}, svg);
+    if (inD(b)) el('circle', {cx: X(b), cy: y, r: 5.5, fill: o.hi && o.hi(r) ? C.hi : C.gold, stroke: C.night, 'stroke-width': 2}, svg);
     text(svg, X(Math.max(a, b)) + 9, y + 4, o.fmt(b), {class: 'vl'});
     const hit = el('rect', {x: labelW, y: y - rowH / 2, width: pw, height: rowH, fill: 'transparent', class: 'mk', tabindex: 0, 'aria-label': `${nm}: ${o.fmt(a)} to ${o.fmt(b)}`}, svg);
     const show = () => tip.show(o.tip(r), X(b), y - 6);
     hit.addEventListener('pointerenter', show); hit.addEventListener('focus', show); hit.addEventListener('pointerleave', () => tip.hide()); hit.addEventListener('blur', () => tip.hide());
   });
+  zoomable(host, svg, row, {axes: 'x', full: {x: [0, max]}, plot: {l: labelW, t: 0, w: pw, h: H}, vw: W, anchor: true, redraw: () => dumbbell(host, rows, o)});
 }
 
 /* ---------- bars with an expected marker ---------- */
 function barsExpected(host, rows, o) {
-  const W = host.clientWidth || 600, rowH = 28, labelW = Math.min(150, W * 0.32), m = {r: 120, t: 6};
+  const W = host.clientWidth || 600, rowH = 28, labelW = Math.min(150, W * 0.32), m = {r: 120, t: 24};
   const H = m.t + rows.length * rowH;
   host.replaceChildren();
+  const row = ztop(host);
   const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: H, role: 'img', 'aria-label': o.aria}, host);
   const tip = tooltip(host);
   const max = Math.max(...rows.map(r => Math.max(o.v(r), o.e(r))));
-  const pw = W - labelW - (W < 480 ? 84 : m.r);
+  const pw = W - labelW - (W < 480 ? 84 : m.r), ax = vaxis(host, [0, max], labelW, pw, W < 480 ? 3 : 4);
+  ax.tk.forEach(v => { const x = ax.X(v); el('line', {x1: x, x2: x, y1: m.t - 6, y2: H, stroke: C.grid}, svg); text(svg, x, 12, o.tick ? o.tick(v, ax.step) : fmtStep(v, ax.step), {'text-anchor': 'middle'}); });
   rows.forEach((r, i) => {
-    const y = m.t + i * rowH, v = o.v(r), e = o.e(r), bw = Math.max(2, v / max * pw), by = y + 7;
+    const y = m.t + i * rowH, v = o.v(r), e = o.e(r), x0 = ax.cx(0), bw = Math.max(v > ax.d0 ? 2 : 0, ax.cx(v) - x0), by = y + 7;
     text(svg, 0, y + rowH / 2 + 4, o.name(r), {fill: '#C9CDD8', 'font-family': 'Figtree, sans-serif', 'font-size': 13});
-    const p = el('path', {d: roundRight(labelW, by, bw, 14, 4), fill: C.gold, class: 'mk', tabindex: 0, 'aria-label': `${o.name(r)}: ${o.fmt(v)}, expected ${o.fmt(e)}`}, svg);
-    const ex = labelW + e / max * pw;
-    el('line', {x1: ex, x2: ex, y1: by - 4, y2: by + 18, stroke: C.blue, 'stroke-width': 2.5, 'stroke-linecap': 'round'}, svg);
-    text(svg, labelW + bw + 8, y + rowH / 2 + 4, o.label(r), {class: 'vl'});
-    const show = () => tip.show(o.tip(r), labelW + bw / 2, by);
-    p.addEventListener('pointerenter', show); p.addEventListener('focus', show); p.addEventListener('pointerleave', () => tip.hide()); p.addEventListener('blur', () => tip.hide());
+    const p = el('path', {d: bw > 0 ? roundRight(x0, by, bw, 14, 4) : `M${x0},${by}h0`, fill: C.gold, class: 'mk', tabindex: 0, 'aria-label': `${o.name(r)}: ${o.fmt(v)}, expected ${o.fmt(e)}`}, svg);
+    if (e >= ax.d0 && e <= ax.d1) { const ex = ax.X(e); el('line', {x1: ex, x2: ex, y1: by - 4, y2: by + 18, stroke: C.blue, 'stroke-width': 2.5, 'stroke-linecap': 'round'}, svg); }
+    if (v > ax.d1) brk(svg, x0 + bw, by, 14);
+    text(svg, x0 + bw + 8, y + rowH / 2 + 4, o.label(r), {class: 'vl'});
+    const hit = el('rect', {x: labelW, y, width: pw, height: rowH, fill: 'transparent'}, svg);
+    const show = () => tip.show(o.tip(r), x0 + Math.max(bw, 8) / 2, by);
+    [p, hit].forEach(n => { n.addEventListener('pointerenter', show); n.addEventListener('pointerleave', () => tip.hide()); });
+    p.addEventListener('focus', show); p.addEventListener('blur', () => tip.hide());
   });
+  zoomable(host, svg, row, {axes: 'x', full: {x: [0, max]}, plot: {l: labelW, t: 0, w: pw, h: H}, vw: W, anchor: true, redraw: () => barsExpected(host, rows, o)});
 }
 
 /* ---------- connections network ---------- */
@@ -684,11 +845,13 @@ function network(host, nodes, edges) {
   const W0 = host.clientWidth || 640, narrow = W0 < 600, W = narrow ? 600 : W0, H = narrow ? 560 : Math.round(Math.max(380, Math.min(660, W * 0.86)));
   const scale = narrow ? W0 / W : 1, fs = narrow ? 16 : 12, margin = narrow ? 146 : 112;
   host.replaceChildren();
-  const svg = el('svg', {viewBox: `0 0 ${W} ${H}`, height: Math.round(H * scale), role: 'img', 'aria-label': 'Network of country statistics linked when they move together, beyond income'}, host);
+  const zrow = ztop(host), st = zstate(host), [vx0, vx1] = st.x || [0, W], [vy0, vy1] = st.y || [0, H], vk = W0 / (vx1 - vx0);
+  const svg = el('svg', {viewBox: `${vx0} ${vy0} ${vx1 - vx0} ${vy1 - vy0}`, height: Math.round(H * scale), role: 'img', 'aria-label': 'Network of country statistics linked when they move together, beyond income'}, host);
   const hint = host.parentElement.querySelector('.card-t span');
   if (hint) hint.textContent = narrow ? 'tap a statistic' : 'hover a statistic';
   if (narrow) svg.style.fontSize = fs + 'px';
-  const tip0 = tooltip(host), tip = {show: (rows, x, y) => tip0.show(rows, x * scale, y * scale), hide: () => tip0.hide()};
+  // tooltips take chart units; map them through the current zoom to pixels on the card
+  const tip0 = tooltip(host), tip = {show: (rows, x, y) => tip0.show(rows, (x - vx0) * vk, (y - vy0) * vk), hide: () => tip0.hide()};
   const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - margin;
   const ring = nodes.filter(n => n.indicator !== 'gdp_pcap').sort((a, b) => DOMAINS.indexOf(a.domain) - DOMAINS.indexOf(b.domain));
   const slots = ring.length + DOMAINS.length; let k = 0, prev = null; const pos = {};
@@ -705,7 +868,7 @@ function network(host, nodes, edges) {
       const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, qx = mx + (cx - mx) * 0.55, qy = my + (cy - my) * 0.55;
       const w = 1.2 + Math.max(0, Math.abs(e.partial_rho) - 0.3) * 9;
       p = el('path', {d: `M${A.x},${A.y}Q${qx},${qy} ${B.x},${B.y}`, stroke: e.partial_rho > 0 ? C.gold : C.blue, 'stroke-width': w, fill: 'none', opacity: 0.85, class: 'eg mk', tabindex: 0}, gE);
-      const show = ev => { const r = svg.getBoundingClientRect(); const sx = ev && ev.clientX ? (ev.clientX - r.left) * (W / r.width) : qx; const sy = ev && ev.clientY ? (ev.clientY - r.top) * (H / r.height) : qy;
+      const show = ev => { const r = svg.getBoundingClientRect(); const sx = ev && ev.clientX ? vx0 + (ev.clientX - r.left) * ((vx1 - vx0) / r.width) : qx; const sy = ev && ev.clientY ? vy0 + (ev.clientY - r.top) * ((vy1 - vy0) / r.height) : qy;
         tip.show([{value: `${byId[e.a].short_label} × ${byId[e.b].short_label}`, label: e.partial_rho > 0 ? 'rise together at the same income' : 'move in opposite directions at the same income'}, {label: 'Partial correlation', value: sgn(e.partial_rho), color: e.partial_rho > 0 ? C.gold : C.blue}, {label: 'Before holding income fixed', value: sgn(e.rho)}, {label: 'Countries', value: int(e.n)}], sx, sy); };
       p.addEventListener('pointermove', show); p.addEventListener('focus', () => show()); p.addEventListener('pointerleave', () => tip.hide()); p.addEventListener('blur', () => tip.hide());
     }
@@ -732,12 +895,14 @@ function network(host, nodes, edges) {
     g.addEventListener('pointerenter', show); g.addEventListener('focus', show);
     g.addEventListener('pointerleave', () => { focus(null); tip.hide(); }); g.addEventListener('blur', () => { focus(null); tip.hide(); });
   });
+  zoomable(host, svg, zrow, {axes: 'xy', yDown: true, maxZoom: 6, full: {x: [0, W], y: [0, H]}, plot: {l: 0, t: 0, w: W, h: H}, vw: W, redraw: () => network(host, nodes, edges)});
 }
 
 /* ================= content ================= */
 const L = D.lineage, dbt = L.dbt || {};
 const nodeById = Object.fromEntries(D.nodes.map(n => [n.indicator, n]));
 const lab = id => (nodeById[id] || {}).short_label || id;
+const REG = {}; ['happiness', 'passports', 'decoupling', 'health', 'olympics', 'bigmac'].forEach(k => (D[k] || []).forEach(r => { if (r.iso3 && r.region_4 && !REG[r.iso3]) REG[r.iso3] = r.region_4; }));
 $('runline').replaceChildren();
 [['sources', K.sources], ['rows landed', int(L.rows_landed)], ['countries', K.countries], ['dbt models', dbt.models], ['data tests passed', `${dbt.tests}/${dbt.tests}`]].forEach(([a, b], i) => {
   const s = h('span'); s.appendChild(document.createTextNode(a + ' ')); s.appendChild(h('b', i === 4 ? 'ok' : null, String(b))); $('runline').appendChild(s);
@@ -763,7 +928,7 @@ tiles.forEach(([l, v, d], i) => { const t = h('div', 'tile'); t.appendChild(h('s
 const beyond = D.edges.filter(e => e.beyond), incomeE = D.edges.filter(e => e.income);
 $('t-conn').textContent = `I tested every pair of ${K.indicators} country statistics, ${int(K.pairs_tested)} in all, across up to ${K.countries} countries. Rich countries score higher on almost everything, so each link is tested twice: as it looks, and with income held fixed. ${K.links_beyond_income} links survive; they are the lines on the map.`;
 $('k-share').textContent = pctU(K.share_explained_by_income);
-$('t-share').textContent = `of the strong correlations between country statistics (${K.strong_links} pairs with |ρ| ≥ 0.5) fade below 0.2 once income is held fixed. Life expectancy and internet use, for example, both track income closely; compare countries with the same income and the link mostly disappears.`;
+$('t-share').textContent = `of the strong correlations between country statistics (${K.strong_links} pairs with |ρ| ≥ 0.5) fade below 0.2 once income is held fixed. Countries that emit more CO2 per person live longer, for example, because richer countries have more of both; compare countries with the same income and the link disappears.`;
 [['Rise together (beyond income)', C.gold, false], ['Move in opposite directions', C.blue, false], ['Tracks income (|ρ| ≥ 0.5)', 'rgba(255,236,200,.45)', true]].forEach(([t, c, dash]) => {
   const s = h('span'); const i = h('i'); i.style.background = dash ? 'transparent' : c; if (dash) i.style.borderTop = '2px dashed ' + c; i.style.height = dash ? '0' : '3px'; i.style.verticalAlign = '3px'; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-net').appendChild(s);
 });
@@ -784,7 +949,7 @@ const perDoubling = (hfit(2000) - hfit(1000));
 const hpLabel = new Set(hpTop.filter(r => r.population >= 5e6).slice(0, 5).map(r => r.iso3));
 $('h-happy').textContent = 'Money buys happiness, at a falling rate.';
 $('t-happy').textContent = `Income alone explains ${pctU(hpR2)} of the gap in life evaluations across ${HP.length} countries. Each doubling of income adds about ${perDoubling.toFixed(2)} points on the 0 to 10 scale, so the first thousand dollars count far more than the last. ${andJoin(hpTop.filter(r => hpLabel.has(r.iso3)).slice(0, 4).map(r => r.country_name))} report more happiness than their income predicts.`;
-const drawHappy = () => scatter($('c-happy'), HP, {x: r => r.gdp_pcap, y: r => r.happiness / 10, logx: true, xTick: v => money(v), yTick: v => v.toFixed(0), xLabel: 'GDP per person, PPP $ (log)', yLabel: 'life evaluation, 0 to 10', aria: 'Scatter of life evaluation against GDP per person',
+const drawHappy = () => scatter($('c-happy'), HP, {x: r => r.gdp_pcap, y: r => r.happiness / 10, logx: true, xTick: (v, s) => moneyS(v, s), yTick: (v, s) => fmtStep(v, s), xLabel: 'GDP per person, PPP $ (log)', yLabel: 'life evaluation, 0 to 10', aria: 'Scatter of life evaluation against GDP per person',
   fit: fitLine(HP, r => r.gdp_pcap, hfit), hi: r => hpLabel.has(r.iso3), label: r => hpLabel.has(r.iso3) ? r.country_name : null,
   tip: r => [{value: r.country_name, label: (r.happiness / 10).toFixed(1) + ' / 10'}, {label: 'Expected for income', value: (r.expected_happiness / 10).toFixed(1)}, {label: 'GDP per person', value: money(r.gdp_pcap)}]});
 table($('tb-happy'), [['Country', r => r.country_name], ['Life evaluation', r => (r.happiness / 10).toFixed(1)], ['Expected', r => (r.expected_happiness / 10).toFixed(1)], ['GDP per person', r => money(r.gdp_pcap)]], hpTop);
@@ -806,7 +971,7 @@ const ftLabel = new Set([...ftTop.filter(r => r.population < 15e6).slice(0, 5).m
 $('h-foot').textContent = `Football’s giant-killers: Uruguay is rated ${ord(uru.world_rank)} with ${ppl(uru.population)} people.`;
 const ftSmall = ftTop.filter(r => r.population < 15e6).slice(0, 5);
 $('t-foot').textContent = `I rebuilt Elo ratings from ${int(K.football_matches_rated)} matches between FIFA-recognised teams since 1872. ${lead.team} leads today. Among countries under 15 million people, ${andJoin(ftSmall.map(r => r.team))} beat what their size and income predict by the widest margins; Portugal, with ${ppl(por.population)} people, is rated ${ord(por.world_rank)} in the world. England, Scotland, Wales and Northern Ireland are rated but not modelled, as they are not separate countries in the population data.`;
-const drawFoot = () => scatter($('c-foot'), FT, {x: r => r.population, y: r => r.rating, logx: true, xTick: v => ppl(v), yTick: v => int(v), xLabel: 'population (log)', yLabel: 'Elo rating', aria: 'Scatter of football Elo rating against population',
+const drawFoot = () => scatter($('c-foot'), FT, {x: r => r.population, y: r => r.rating, logx: true, xTick: (v, s) => pplS(v, s), yTick: (v, s) => fmtStep(v, s), xLabel: 'population (log)', yLabel: 'Elo rating', aria: 'Scatter of football Elo rating against population',
   hi: r => ftTop.filter(t => t.population < 15e6).slice(0, 5).some(t => t.iso3 === r.iso3), label: r => ftLabel.has(r.iso3) ? r.team : null,
   tip: r => [{value: r.team, label: `Elo ${int(r.rating)} · world #${r.world_rank}`}, {label: 'Expected for size and income', value: int(r.expected_rating)}, {label: 'Population', value: ppl(r.population)}, {label: 'Change since 2000', value: r.change_since_2000 != null ? sgn(r.change_since_2000, 0) : '–'}]});
 table($('tb-foot'), [['Team', r => r.team], ['Rank', r => r.world_rank], ['Elo', r => int(r.rating)], ['Expected', r => r.expected_rating ? int(r.expected_rating) : '–'], ['Since 2000', r => r.change_since_2000 != null ? sgn(r.change_since_2000, 0) : '–']], FOOT);
@@ -817,7 +982,7 @@ const pLabel = new Set([...PASS.slice(0, 3).map(r => r.iso3), ...pOver.map(r => 
 const pfit = olsLog(PASS.filter(r => r.gdp_pcap && r.population >= 1e6), r => r.gdp_pcap, r => r.passport_power);
 $('h-pass').textContent = 'Passport power follows income, with notable exceptions.';
 $('t-pass').textContent = `The strongest passport opens ${pTop.passport_power} destinations without a visa arranged in advance. Income explains most of the spread, but ${andJoin(pOver.map(r => `${r.country_name} (${r.passport_power})`))} open far more doors than their income predicts, usually thanks to regional agreements.`;
-const drawPass = () => scatter($('c-pass'), PASS.filter(r => r.gdp_pcap), {x: r => r.gdp_pcap, y: r => r.passport_power, logx: true, xTick: v => money(v), yTick: v => int(v), yMin: 0, xLabel: 'GDP per person, PPP $ (log)', yLabel: 'destinations', aria: 'Scatter of passport power against GDP per person',
+const drawPass = () => scatter($('c-pass'), PASS.filter(r => r.gdp_pcap), {x: r => r.gdp_pcap, y: r => r.passport_power, logx: true, xTick: (v, s) => moneyS(v, s), yTick: (v, s) => fmtStep(v, s), yMin: 0, xLabel: 'GDP per person, PPP $ (log)', yLabel: 'destinations', aria: 'Scatter of passport power against GDP per person',
   fit: fitLine(PASS.filter(r => r.gdp_pcap), r => r.gdp_pcap, pfit), hi: r => pLabel.has(r.iso3), label: r => pLabel.has(r.iso3) ? r.country_name : null,
   tip: r => [{value: r.country_name, label: `${r.passport_power} destinations · rank ${r.power_rank}`}, {label: 'Expected for income', value: r.expected_power != null ? int(r.expected_power) : '–'}, {label: 'Passports it admits visa-free', value: String(r.passport_openness)}]});
 table($('tb-pass'), [['Passport', r => r.country_name], ['Destinations', r => r.passport_power], ['Rank', r => r.power_rank], ['Expected', r => r.expected_power != null ? int(r.expected_power) : '–'], ['Admits', r => r.passport_openness]], PASS);
@@ -859,7 +1024,7 @@ $('dec-yr').textContent = dec[0].latest_year;
 $('dec-sub').textContent = `${decShown.length} countries of 1M+ · ${dec.length - decShown.length} beyond +250% not shown`;
 $('h-dec').textContent = `${decN} countries grew their economies while cutting emissions.`;
 $('t-dec').textContent = `Between 2005 and ${dec[0].latest_year}, ${decN} of ${dec.length} countries with 1M+ people grew GDP and cut the CO2 they emit at home. ${decBoth} also cut consumption-based emissions, which count the CO2 in what they import. The UK grew ${pctU(uk.gdp_change)} while its territorial emissions fell ${pctU(-uk.co2_change)}. Everyone in the lower-right box decoupled.`;
-const drawDec = () => scatter($('c-dec'), decShown, {x: r => r.gdp_change * 100, y: r => r.co2_change * 100, xTick: v => (v > 0 ? '+' : '') + int(v) + '%', yTick: v => (v > 0 ? '+' : '') + int(v) + '%', zero: {x: true, y: true}, xLabel: 'change in GDP (PPP)', yLabel: 'change in CO2 (territorial)', aria: 'Scatter of GDP change against CO2 change since 2005',
+const drawDec = () => scatter($('c-dec'), decShown, {x: r => r.gdp_change * 100, y: r => r.co2_change * 100, xTick: (v, s) => (v > 0 ? '+' : '') + fmtStep(v, s) + '%', yTick: (v, s) => (v > 0 ? '+' : '') + fmtStep(v, s) + '%', zero: {x: true, y: true}, xLabel: 'change in GDP (PPP)', yLabel: 'change in CO2 (territorial)', aria: 'Scatter of GDP change against CO2 change since 2005',
   hi: r => r.is_decoupled_both, label: r => decLabel.has(r.iso3) ? r.country_name : null,
   tip: r => [{value: r.country_name, label: r.is_decoupled_both ? 'decoupled, including imports' : r.is_decoupled_territorial ? 'decoupled at home' : 'not decoupled'}, {label: 'GDP', value: pct(r.gdp_change)}, {label: 'CO2 at home', value: pct(r.co2_change)}, {label: 'CO2 incl. imports', value: r.consumption_co2_change != null ? pct(r.consumption_co2_change) : '–'}]});
 table($('tb-dec'), [['Country', r => r.country_name], ['GDP', r => pct(r.gdp_change)], ['CO2 at home', r => pct(r.co2_change)], ['CO2 incl. imports', r => r.consumption_co2_change != null ? pct(r.consumption_co2_change) : '–']], dec.filter(r => r.is_decoupled_territorial));
@@ -869,7 +1034,7 @@ const EN = D.energy; const world = EN.find(r => r.iso3 === 'WLD'); const enTop =
 $('h-energy').textContent = `Solar and wind went from ${f1(world.solar_wind_2015)}% to ${f1(world.solar_wind_latest)}% of the world’s electricity in ${world.latest_year - 2015} years.`;
 $('t-energy').textContent = `The fastest movers changed their grids within a decade: ${enTop.slice(0, 3).map(r => `${r.country_name} from ${int(r.solar_wind_2015)}% to ${int(r.solar_wind_latest)}%`).join('; ')}. Among countries generating at least 5 TWh a year, ${EN.filter(r => r.iso3 !== 'WLD' && r.solar_wind_latest >= 30).length} now get 30% or more of their power from the sun and wind.`;
 [['2015', C.blue], [String(world.latest_year), C.gold]].forEach(([t, c]) => { const s = h('span'); const i = h('i'); i.style.background = c; s.appendChild(i); s.appendChild(document.createTextNode(t)); $('lg-energy').appendChild(s); });
-const drawEnergy = () => dumbbell($('c-energy'), [world, ...enTop], {name: r => r.country_name, a: r => r.solar_wind_2015, b: r => r.solar_wind_latest, fmt: v => int(v) + '%', tick: v => int(v) + '%', hi: r => r.iso3 === 'WLD', aria: 'Solar and wind share of electricity, 2015 and latest',
+const drawEnergy = () => dumbbell($('c-energy'), [world, ...enTop], {name: r => r.country_name, a: r => r.solar_wind_2015, b: r => r.solar_wind_latest, fmt: v => int(v) + '%', tick: (v, s) => fmtStep(v, s) + '%', hi: r => r.iso3 === 'WLD', aria: 'Solar and wind share of electricity, 2015 and latest',
   tip: r => [{value: f1(r.solar_wind_latest) + '%', label: `${r.country_name} · ${r.latest_year}`}, {label: '2015', value: f1(r.solar_wind_2015) + '%', color: C.blue}, {label: 'Solar', value: f1(r.solar_latest) + '%'}, {label: 'Wind', value: f1(r.wind_latest) + '%'}]});
 table($('tb-energy'), [['Country', r => r.country_name], ['2015', r => f1(r.solar_wind_2015) + '%'], ['Latest', r => f1(r.solar_wind_latest) + '%'], ['Year', r => r.latest_year]], EN);
 
@@ -879,7 +1044,7 @@ const hBest = [...HL].filter(r => r.health_spend_per_person >= 1500).sort((a, b)
 const hLabel = new Set(['USA', ...hBest.map(r => r.iso3), 'CHE', 'NOR']);
 $('h-health').textContent = `The US spends the most on health, yet lives ${f1(-usaH.residual)} years less than that spending buys elsewhere.`;
 $('t-health').textContent = `At $${int(usaH.health_spend_per_person)} per person (PPP), US health spending is the highest in the data, while life expectancy is ${f1(usaH.life_expectancy)} years: ${f1(-usaH.residual)} below what the pattern across ${HL.length} countries predicts for that spending. ${andJoin(hBest.map(r => r.country_name))} get the most years for their money among higher spenders.`;
-const drawHealth = () => scatter($('c-health'), HL, {x: r => r.health_spend_per_person, y: r => r.life_expectancy, logx: true, xTick: v => money(v), yTick: v => int(v), xLabel: 'health spending per person, PPP $ (log)', yLabel: 'life expectancy, years', aria: 'Scatter of life expectancy against health spending per person',
+const drawHealth = () => scatter($('c-health'), HL, {x: r => r.health_spend_per_person, y: r => r.life_expectancy, logx: true, xTick: (v, s) => moneyS(v, s), yTick: (v, s) => fmtStep(v, s), xLabel: 'health spending per person, PPP $ (log)', yLabel: 'life expectancy, years', aria: 'Scatter of life expectancy against health spending per person',
   fit: fitLine(HL, r => r.health_spend_per_person, hfit2), hi: r => hLabel.has(r.iso3), label: r => hLabel.has(r.iso3) ? r.country_name : null,
   tip: r => [{value: r.country_name, label: f1(r.life_expectancy) + ' years'}, {label: 'Expected for spending', value: f1(r.expected_life_expectancy)}, {label: 'Spending per person', value: money(r.health_spend_per_person)}]});
 table($('tb-health'), [['Country', r => r.country_name], ['Life expectancy', r => f1(r.life_expectancy)], ['Expected', r => f1(r.expected_life_expectancy)], ['Spending ($)', r => int(r.health_spend_per_person)]], [...HL].sort((a, b) => b.residual - a.residual));
